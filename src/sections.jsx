@@ -76,7 +76,7 @@ function Nav() {
                                 <span className="nav-link__idx">{n.idx}</span>{n.label}
                             </a>
                         ))}
-                        <a href="Motion Lab.html" className="nav-link nav-link--lab">
+                        <a href="motion-lab.html" className="nav-link nav-link--lab">
                             <span className="nav-link__idx">✦</span>Motion Lab
                         </a>
                     </div>
@@ -93,7 +93,7 @@ function Nav() {
                 {NAV.map((n) => (
                     <a key={n.id} href={`#${n.id}`} onClick={go(n.id)}><span>{n.idx}</span>{n.label}</a>
                 ))}
-                <a href="Motion Lab.html"><span>✦</span>Motion Lab</a>
+                <a href="motion-lab.html"><span>✦</span>Motion Lab</a>
             </div>
         </>
     );
