@@ -1,0 +1,11 @@
+<article class="project-card <%= 'project-featured' if local_assigns[:featured] %>">
+  <%= link_to project_path(project), class: 'project-image-link', aria: {label: "View #{project.name} case study"} do %><%= render 'shared/project_art', project: project %><% end %>
+  <div class="project-card-body">
+    <div class="project-meta"><span class="meta-label"><%= icon(project_category_glyph(project.category)) %><%= local_assigns[:featured] ? 'FEATURED PROJECT' : project.category.upcase %></span><span class="project-status"><%= project.status %></span></div>
+    <%= link_to project_path(project), class: 'project-title-link' do %>
+      <h3><%= project.name %></h3>
+      <%= icon('external') %><% end %>
+    <p><%= project.tagline %></p>
+    <div class="tags"><% project.technologies.first(4).each do |technology| %><span><%= tech_icon(technology) %><%= technology %></span><% end %></div>
+  </div>
+</article>

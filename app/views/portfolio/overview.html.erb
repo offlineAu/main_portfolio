@@ -1,0 +1,68 @@
+<% content_for :title, 'Overview' %>
+<section class="hero" aria-labelledby="hero-name">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <p class="hero-meta hero-meta-left"><%= icon('code') %><%= @profile.title %></p>
+  <p class="hero-meta hero-meta-right"><%= icon('pin') %><%= @profile.location %></p>
+  <h1 class="hero-name" id="hero-name"><span><%= @profile.short_name.upcase %></span> <span><%= @profile.name.split.last.upcase %></span></h1>
+  <% if @profile.portrait.attached? %>
+    <%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name, class: 'hero-portrait', fetchpriority: 'high' %>
+  <% end %>
+  <p class="hero-intro"><%= @profile.introduction %></p>
+  <div class="hero-cta">
+    <%= link_to projects_path, class: 'button button-glow' do %>View my work<% end %>
+    <%= link_to 'About me', about_path, class: 'text-link' %>
+  </div>
+  <div class="marquee" aria-hidden="true">
+    <ul class="marquee-track"><% 2.times do %><% @technologies.each do |technology| %><li><%= tech_icon(technology) %><%= technology %></li><% end %><% end %></ul>
+  </div>
+</section>
+
+<div class="paper">
+  <section class="intro-band" aria-labelledby="about-heading">
+    <div class="intro-copy">
+      <p class="eyebrow">ABOUT</p>
+      <h2 id="about-heading"><%= @profile.title %></h2>
+      <p><%= @profile.about.to_s.split(/\n{2,}/).first %></p>
+      <%= link_to about_path, class: 'text-link' do %>More about me <%= icon('arrow') %><% end %>
+    </div>
+    <dl class="stats">
+      <div><dt><%= icon('folder') %>Selected projects</dt><dd><%= @projects.count.to_s.rjust(2, '0') %></dd></div>
+      <div><dt><%= icon('code') %>Technologies used</dt><dd><%= @technology_count %></dd></div>
+      <div><dt><%= icon('layers') %>Focus</dt><dd class="stat-text">Web &amp; mobile</dd></div>
+    </dl>
+  </section>
+
+  <section class="selected-work" aria-labelledby="selected-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">PROJECTS</p>
+        <h2 id="selected-heading">Selected work</h2>
+      </div>
+      <%= link_to projects_path, class: 'text-link' do %>All projects <%= icon('arrow') %><% end %>
+    </div>
+    <% if @featured %><%= render 'shared/project_card', project: @featured, featured: true %><% else %>
+      <div class="empty-state">No published projects.</div>
+    <% end %>
+    <div class="mini-project-grid"><% @recent.each do |project| %><%= render 'shared/project_card', project: project, featured: false %><% end %></div>
+  </section>
+
+  <section class="overview-columns" aria-label="Experience and focus">
+    <div class="timeline-preview">
+      <p class="eyebrow">EXPERIENCE</p>
+      <h2>Where I’ve worked</h2>
+      <% @experiences.each do |experience| %>
+        <div class="mini-experience"><small><%= icon('calendar') %><%= experience.period %></small>
+          <h3><%= experience.role %></h3>
+          <p><%= icon('building') %><%= experience.organization %></p>
+        </div>
+      <% end %>
+      <%= link_to experience_path, class: 'text-link' do %>Full experience <%= icon('arrow') %><% end %>
+    </div>
+    <div class="focus-preview">
+      <p class="eyebrow">CURRENT FOCUS</p>
+      <h2>What I’m working on</h2>
+      <p><%= @profile.focus.to_s.lines.reject(&:blank?).first %></p>
+      <%= link_to contact_path, class: 'button button-dark' do %>Let’s talk <%= icon('arrow') %><% end %>
+    </div>
+  </section>
+</div>

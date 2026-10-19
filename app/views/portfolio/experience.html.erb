@@ -1,0 +1,18 @@
+<% content_for :title, 'Experience' %>
+<div class="page-heading">
+  <div>
+    <h1>Experience</h1>
+    <p class="page-subtitle">School management systems and student well-being platforms.</p>
+  </div>
+</div>
+<section class="experience-list"><% @experiences.each do |experience| %>
+    <article class="experience-card">
+      <div class="experience-date"><span class="square-icon"><%= icon('briefcase') %></span>
+        <p><%= icon('calendar') %><%= experience.period %></p>
+        <span class="pill"><%= experience.current? ? 'Current role' : 'Experience' %></span></div>
+      <div>
+        <h2><%= experience.role %></h2>
+        <h3><%= icon('building') %><%= experience.organization %></h3>
+        <%= simple_format experience.details %></div>
+    </article>
+  <% end %></section>

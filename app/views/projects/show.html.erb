@@ -1,0 +1,51 @@
+<% content_for :title, @project.name %>
+<% content_for :description, @project.tagline %>
+<div class="case-heading"><%= link_to projects_path, class: 'back-link' do %>← All projects<% end %>
+  <div class="case-title-row">
+    <div>
+      <p class="eyebrow meta-label"><%= icon(project_category_glyph(@project.category)) %><%= @project.category.upcase %> / <%= @project.status.upcase %></p>
+      <h1><%= @project.name %></h1>
+      <p class="page-subtitle"><%= @project.tagline %></p>
+    </div>
+    <div class="case-links"><%= link_to @project.source_url, class: 'button button-dark', target: '_blank', rel: 'noopener noreferrer' do %><%= icon('github') %>View source<% end if @project.source_url.present? %><%= link_to @project.live_url, class: 'button button-outline', target: '_blank', rel: 'noopener noreferrer' do %>Live project <%= icon('external') %><% end if @project.live_url.present? %></div>
+  </div>
+</div>
+<%= render 'shared/project_art', project: @project, large: true %>
+<div class="case-facts">
+  <div><small><%= icon('user') %>MY ROLE</small><strong><%= @project.role %></strong></div>
+  <div><small><%= icon('layers') %>PROJECT TYPE</small><strong><%= @project.category %></strong></div>
+  <% if @project.year.present? %>
+    <div><small><%= icon('calendar') %>PERIOD</small><strong><%= @project.year %></strong></div>
+  <% end %>
+  <div class="case-stack"><small><%= icon('code') %>BUILT WITH</small><div class="tags"><% @project.technologies.each do |technology| %><span><%= tech_icon(technology) %><%= technology %></span><% end %></div></div>
+</div>
+<div class="case-body">
+  <section>
+    <p class="eyebrow">OVERVIEW</p>
+    <h2>Project overview</h2>
+    <%= simple_format @project.description %><% if @project.highlights.any? %>
+      <ul class="highlight-list"><% @project.highlights.each do |highlight| %>
+          <li><%= icon('check') %><%= highlight %></li>
+        <% end %></ul>
+    <% end %></section>
+  <div><% [['The problem', @project.problem], ['My contribution', @project.contribution], ['Under the hood', @project.implementation]].each do |heading, body| %><% if body.present? %>
+        <section class="case-section">
+          <h2><%= heading %></h2>
+          <%= simple_format body %></section>
+      <% end %><% end %></div>
+</div>
+<% if @project.gallery.attached? %>
+  <section class="case-gallery">
+    <div class="section-heading">
+      <h2>Inside the project</h2>
+    </div>
+    <% @project.ordered_gallery.each do |attachment| %>
+      <figure><%= image_tag media_path_for(attachment), alt: @project.gallery_alt_for(attachment), loading: 'lazy' %></figure>
+    <% end %></section>
+<% end %>
+<section class="contact-banner">
+  <div>
+    <p class="eyebrow">CONTACT</p>
+    <h2>Discuss a project</h2>
+  </div>
+  <%= mail_to @profile.email, class: 'button button-dark' do %>Get in touch <%= icon('arrow') %><% end %></section>

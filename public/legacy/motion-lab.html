@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Motion Lab — Airl Joriz</title>
+    <meta name="description" content="A playground of hand-built web motion techniques by Airl Joriz R. Janoplo." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="src/motion-lab.css" />
+</head>
+<body>
+    <!-- SVG filters / gradients -->
+    <svg class="ml-svg-defs" aria-hidden="true">
+        <defs>
+            <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" />
+                <feBlend in="SourceGraphic" in2="goo" />
+            </filter>
+            <linearGradient id="blobGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f3e1b4" />
+                <stop offset="100%" stop-color="#93753f" />
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <div class="curtain" id="curtain"><div class="curtain__mark">Au</div></div>
+
+    <div class="ml-top">
+        <a class="ml-back" href="/"><span class="ml-back__arrow">←</span> Portfolio</a>
+        <span class="ml-top__title"><b>Motion</b> Lab · 08</span>
+    </div>
+
+    <header class="ml-hero">
+        <span class="ml-hero__eyebrow">Motion Lab · 8 techniques</span>
+        <h1 class="ml-hero__title">Motion, <em>by hand</em></h1>
+        <p class="ml-hero__sub">A working playground of web-animation techniques — each one built from scratch with CSS, SVG, and a little JavaScript. No libraries. Hover, click, and poke around.</p>
+    </header>
+
+    <main class="ml-grid">
+        <!-- 01 GLASS / NEURO / CLAY -->
+        <section class="lab">
+            <div class="lab__stage">
+                <div class="gnc-stage">
+                    <div class="gnc-card" id="gnc-card" data-mat="glass">
+                        <div class="gnc-card__row">
+                            <div class="gnc-card__dot"></div>
+                            <div><div class="gnc-card__t1"></div><div class="gnc-card__t2"></div></div>
+                        </div>
+                        <div class="gnc-card__bar"></div>
+                        <div class="gnc-card__bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">01</span>
+                <h2 class="lab__title">Glass · Neuro · Clay</h2>
+                <p class="lab__cap">Three surface materials on one component. Switch between frosted glass, soft dark neumorphism, and puffy claymorphism.</p>
+                <div class="lab__controls">
+                    <div class="seg" id="gnc-seg">
+                        <button class="is-on" data-mat="glass">Glass</button>
+                        <button data-mat="neuro">Neuro</button>
+                        <button data-mat="clay">Clay</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02 SKELETON -->
+        <section class="lab">
+            <div class="lab__stage">
+                <div class="sk" id="sk">
+                    <div class="sk__media shimmer"></div>
+                    <div class="sk__line w1 shimmer"></div>
+                    <div class="sk__line w2 shimmer"></div>
+                    <div class="sk__line w3 shimmer"></div>
+                    <div class="sk__avatar-row">
+                        <div class="sk__avatar shimmer"></div>
+                        <div class="sk__line sk__name shimmer" style="width:40%;margin:0;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">02</span>
+                <h2 class="lab__title">Loading &amp; skeleton screens</h2>
+                <p class="lab__cap">A shimmering placeholder that resolves into real content — the perceived-performance trick behind every good app load.</p>
+                <div class="lab__controls"><button class="mini-btn" id="sk-replay">↻ Replay load</button></div>
+            </div>
+        </section>
+
+        <!-- 03 PAGE TRANSITIONS -->
+        <section class="lab lab--wide">
+            <div class="lab__stage">
+                <div class="pt-frame">
+                    <div class="pt-panel pt-panel--1 is-active">
+                        <span class="pt-panel__k">Home</span>
+                        <span class="pt-panel__h">Welcome</span>
+                        <span class="pt-panel__p">A gold curtain sweeps across as one view hands off to the next.</span>
+                    </div>
+                    <div class="pt-panel pt-panel--2">
+                        <span class="pt-panel__k">Work</span>
+                        <span class="pt-panel__h">Selected</span>
+                        <span class="pt-panel__p">Content scales and fades in behind the wipe for a seamless cut.</span>
+                    </div>
+                    <div class="pt-panel pt-panel--3">
+                        <span class="pt-panel__k">Contact</span>
+                        <span class="pt-panel__h">Say hello</span>
+                        <span class="pt-panel__p">No reload, no flash of white — just motion that carries you over.</span>
+                    </div>
+                    <div class="pt-curtain" id="pt-curtain"></div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">03</span>
+                <h2 class="lab__title">Page transitions</h2>
+                <p class="lab__cap">Route changes that feel intentional. Click the dots or step through.</p>
+                <div class="lab__controls">
+                    <div class="pt-dots" id="pt-dots">
+                        <button class="is-on" aria-label="Panel 1"></button>
+                        <button aria-label="Panel 2"></button>
+                        <button aria-label="Panel 3"></button>
+                    </div>
+                    <button class="mini-btn" id="pt-next">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04 EXPRESSIVE TYPOGRAPHY -->
+        <section class="lab lab--wide">
+            <div class="lab__stage">
+                <div class="ty-stage">
+                    <div class="ty-word" id="ty-word" aria-label="MOTION"></div>
+                    <div class="ty-rotator">
+                        <span>I like to</span>
+                        <span class="ty-rotator__mask"><span class="ty-rotator__list" id="ty-rotator-list">
+                            <span>design</span><span>animate</span><span>build</span><span>ship</span>
+                            <span>design</span><span>animate</span><span>build</span><span>ship</span>
+                        </span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">04</span>
+                <h2 class="lab__title">Expressive typography</h2>
+                <p class="lab__cap">Type as motion: letters drift and spring on hover, and a masked rotator cycles words on a loop.</p>
+            </div>
+        </section>
+
+        <!-- 05 MICROINTERACTIONS -->
+        <section class="lab lab--wide">
+            <div class="lab__stage">
+                <div class="mi-stage">
+                    <div class="mi-cell"><button class="mi-magnet" id="mi-magnet">Hover me</button><span class="mi-cell__label">magnetic fill</span></div>
+                    <div class="mi-cell"><button class="mi-heart" id="mi-heart" aria-label="Like">♡</button><span class="mi-cell__label">like burst</span></div>
+                    <div class="mi-cell"><button class="mi-toggle" id="mi-toggle" aria-label="Toggle"></button><span class="mi-cell__label">toggle</span></div>
+                    <div class="mi-cell"><button class="mi-copy" id="mi-copy" data-copy="npm i motion"><span class="mi-copy__t">npm i motion</span></button><span class="mi-cell__label">copy → check</span></div>
+                    <div class="mi-cell"><div class="mi-stars" id="mi-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div><span class="mi-cell__label">star rating</span></div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">05</span>
+                <h2 class="lab__title">Microinteractions &amp; hover</h2>
+                <p class="lab__cap">The small, satisfying details: a magnetic button, a like that bursts, a spring toggle, copy-to-clipboard feedback, and a star rating.</p>
+            </div>
+        </section>
+
+        <!-- 06 LIQUID -->
+        <section class="lab">
+            <div class="lab__stage">
+                <div class="liquid-stage">
+                    <div class="goo">
+                        <div class="goo__b goo__b--1"></div>
+                        <div class="goo__b goo__b--2"></div>
+                        <div class="goo__b goo__b--3"></div>
+                        <div class="goo__b goo__b--4"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">06</span>
+                <h2 class="lab__title">Liquid motion</h2>
+                <p class="lab__cap">An SVG gooey filter fuses moving blobs into one molten metal — fitting, for someone whose handle is Au.</p>
+            </div>
+        </section>
+
+        <!-- 07 ANIMATED GRADIENTS -->
+        <section class="lab">
+            <div class="lab__stage">
+                <div class="grad-stage">
+                    <div class="grad-orb"></div>
+                    <div class="grad-text">liquid gold</div>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">07</span>
+                <h2 class="lab__title">Animated gradients</h2>
+                <p class="lab__cap">A slowly rotating conic ring and a flowing gradient-clipped headline — depth and warmth with zero images.</p>
+            </div>
+        </section>
+
+        <!-- 08 MORPHING -->
+        <section class="lab lab--wide">
+            <div class="lab__stage">
+                <div class="morph-stage">
+                    <svg class="morph-blob" viewBox="0 0 200 200" aria-hidden="true">
+                        <path d="M100,20 C140,20 180,55 180,100 C180,145 140,180 100,180 C55,180 20,140 20,100 C20,55 60,20 100,20 Z">
+                            <animate attributeName="d" dur="7s" repeatCount="indefinite"
+                                values="
+                                M100,20 C140,20 180,55 180,100 C180,145 140,180 100,180 C55,180 20,140 20,100 C20,55 60,20 100,20 Z;
+                                M100,30 C150,15 175,60 170,105 C165,150 130,175 95,170 C50,165 25,125 30,90 C35,50 55,42 100,30 Z;
+                                M100,25 C135,35 170,50 175,95 C180,140 145,170 100,175 C60,180 30,145 25,100 C20,55 65,15 100,25 Z;
+                                M100,20 C140,20 180,55 180,100 C180,145 140,180 100,180 C55,180 20,140 20,100 C20,55 60,20 100,20 Z" />
+                        </path>
+                    </svg>
+                    <button class="morph-icon" id="morph-icon" aria-label="Play / pause morph">
+                        <svg viewBox="0 0 30 30">
+                            <path class="mbar mbar--l" d="M8 5 L8 25 L17 15 Z"></path>
+                            <path class="mbar mbar--r" d="M17 15 L17 15 L17 15 Z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="lab__foot">
+                <span class="lab__idx">08</span>
+                <h2 class="lab__title">Morphing effects</h2>
+                <p class="lab__cap">A blob that endlessly reshapes via SVG path interpolation, plus a play ⇄ pause icon that morphs on click.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="ml-foot">
+        <p>© <span id="yr"></span> Airl Joriz R. Janoplo · Motion Lab</p>
+        <a href="/">← Back to portfolio</a>
+    </footer>
+
+    <script>
+        // build the kinetic word
+        (function () {
+            const w = document.getElementById('ty-word');
+            if (w) 'MOTION'.split('').forEach((ch, i) => {
+                const s = document.createElement('span');
+                s.textContent = ch; s.style.setProperty('--i', i);
+                w.appendChild(s);
+            });
+            document.getElementById('yr').textContent = new Date().getFullYear();
+        })();
+    </script>
+    <script src="src/motion-lab.js"></script>
+</body>
+</html>

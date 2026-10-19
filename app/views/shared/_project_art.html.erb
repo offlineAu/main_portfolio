@@ -1,0 +1,9 @@
+<div class="project-art art-<%= project_color(project) %> <%= local_assigns[:large] ? 'art-large' : '' %>">
+  <% if project.cover.attached? %>
+    <%= image_tag media_path_for(project.cover.attachment), alt: project.cover_alt.presence || "#{project.name} project cover", loading: 'lazy' %>
+  <% else %>
+    <div class="art-top"><span><%= project.category %></span></div>
+    <div class="art-word"><span><%= project.name %></span><small><%= project.tagline %></small></div>
+    <div class="art-bottom"><span><%= project.technologies.first(3).join(' / ') %></span><span>SELECTED WORK</span></div>
+  <% end %>
+</div>

@@ -1,0 +1,31 @@
+<%= form_with model: @record, scope: :content, url: @record.persisted? ? admin_content_path(resource: @resource, id: @record.to_param) : admin_contents_path(resource: @resource), class: 'editor-form panel', data: {controller: 'editor', action: 'submit->editor#submitting'} do |form| %>
+  <% if @record.errors.any? %>
+    <div class="flash alert" role="alert"><strong>Please check the following:</strong>
+      <ul><% @record.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %></ul>
+    </div>
+  <% end %>
+  <% fields = case @resource
+     when 'projects' then {name: :text, slug: :text, tagline: :text, role: :text, year: :text, category: Project::CATEGORIES, status: Project::STATUSES, description: :area, problem: :area, contribution: :area, implementation: :area, technologies_text: :text, highlights_text: :area, source_url: :url, live_url: :url, cover_alt: :text, gallery_alt: :text, editorial_notes: :area, position: :number, featured: :check, published: :check}
+     when 'skills' then {name: :text, category: Skill::GROUPS, note: :area, position: :number}
+     when 'experiences' then {role: :text, organization: :text, period: :text, details: :area, position: :number, current: :check}
+     when 'profile' then {name: :text, short_name: :text, handle: :text, title: :text, location: :text, email: :email, phone: :text, website_url: :url, education: :area, github_url: :url, linkedin_url: :url, availability: :text, introduction: :area, about: :area, focus: :area, credentials: :area, portrait_alt: :text}
+     end %>
+  <div class="editor-fields"><% fields.each do |name, kind| %>
+      <div class="field <%= 'field-wide' if [:area, :check].include?(kind) %>"><%= form.label name, {technologies_text: 'Technologies (comma separated)', highlights_text: 'Highlights (one per line)', editorial_notes: 'Private editorial notes', focus: 'Current focus (one per line)', published: 'Published — visible to everyone', featured: 'Feature on the overview'}.fetch(name, name.to_s.humanize) %><% case kind
+      when Array %><%= form.select name, kind %><% when :area %><%= form.text_area name, rows: name == :description || name == :about ? 6 : 4 %><% when :check %><%= form.check_box name %><% when :number %><%= form.number_field name, min: 0, required: true %><% when :url %><%= form.url_field name %><% when :email %><%= form.email_field name, required: true %><% else %><%= form.text_field name, readonly: name == :slug && @record.persisted? %><% end %><% if name == :slug %><small>Lowercase words separated by hyphens. Permanent after creation.</small><% elsif name == :editorial_notes %><small>For your review only. Never displayed on the public portfolio.</small><% end %></div>
+    <% end %></div>
+  <% if @record.is_a?(Project) || @record.is_a?(Profile) %>
+    <fieldset class="upload-fields"><legend>Images</legend>
+      <p class="muted">JPEG, PNG, or WebP. Up to 10MB per image. Add descriptive alternative text above.</p>
+      <% names = @record.is_a?(Project) ? [:cover, :gallery] : [:portrait] %><% names.each do |name| %>
+        <div class="field"><%= form.label name %><%= form.file_field name, multiple: name == :gallery, accept: 'image/jpeg,image/png,image/webp' %><% association = @record.public_send(name); attachments = name == :gallery ? association.attachments : [association.attachment].compact %>
+          <div class="upload-previews"><% attachments.each do |attachment| %><% if attachment.persisted? %>
+                <div><%= image_tag media_path_for(attachment), alt: "Current #{name}" %><% if name == :gallery %><label for="image-alt-<%= attachment.id %>">Alternative text</label><%= text_field_tag "content[gallery_details][#{attachment.id}][alt]", @record.gallery_details.dig(attachment.id.to_s, 'alt'), id: "image-alt-#{attachment.id}" %><label for="image-position-<%= attachment.id %>">Image position</label><%= number_field_tag "content[gallery_details][#{attachment.id}][position]", @record.gallery_details.dig(attachment.id.to_s, 'position') || attachment.id, min: 0, id: "image-position-#{attachment.id}" %><% end %><label class="checkbox-label"><%= check_box_tag 'remove_images[]', attachment.id, false, id: "remove-image-#{attachment.id}" %> Remove image</label></div>
+              <% end %><% end %></div>
+        </div>
+      <% end %></fieldset>
+  <% end %>
+  <div class="editor-actions"><%= form.submit 'Save changes', class: 'button button-dark', data: {editor_target: 'submit'} %><%= link_to 'Back to studio', admin_root_path, class: 'text-link' %><span class="muted" data-editor-target="status" role="status"></span></div>
+<% end %>

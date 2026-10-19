@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en"><head><title><%= content_for(:title).presence || 'Content studio' %> · Au</title><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><%= csrf_meta_tags %><%= csp_meta_tag %><%= stylesheet_link_tag 'base', 'admin', 'data-turbo-track': 'reload' %><%= javascript_importmap_tags %><link rel="icon" href="/favicon.svg"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;550;600;650;700&display=swap" rel="stylesheet"></head>
+  <body class="admin-body"><a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="admin-header"><%= link_to 'Au / Content studio', admin_root_path, class: 'admin-brand' %><nav><%= link_to 'View portfolio ↗', root_path %><% if authenticated? %><%= button_to 'Sign out', session_path, method: :delete, class: 'text-link' %><% end %></nav></header>
+    <div class="admin-layout"><% if authenticated? %>
+        <aside class="admin-nav"><%= link_to safe_join([icon('grid'), 'Overview']), admin_root_path %><% Admin::ContentController::RESOURCES.keys.each do |resource| %><%= link_to safe_join([icon({ 'projects' => 'folder', 'profile' => 'user', 'skills' => 'code', 'experience' => 'briefcase' }.fetch(resource.to_s, 'layers')), resource.humanize]), admin_contents_path(resource: resource), class: ('active' if params[:resource] == resource) %><% end %></aside>
+      <% end %><main id="main-content" class="admin-content"><% flash.each do |key, message| %>
+          <div class="flash <%= key %>" role="status"><%= message %></div>
+        <% end %><%= yield %></main></div>
+  </body></html>

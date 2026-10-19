@@ -1,0 +1,9 @@
+<% content_for :title, 'Owner sign in' %>
+<section class="login-card panel">
+  <p class="eyebrow">CONTENT STUDIO</p>
+  <h1>Owner sign in</h1>
+  <p class="muted">Sign in to edit your portfolio.</p>
+  <%= form_with url: session_path, class: 'editor-form' do |form| %>
+    <div class="field"><%= form.label :email_address, 'Email address' %><%= form.email_field :email_address, required: true, autocomplete: 'username', autofocus: true %></div>
+    <div class="field"><%= form.label :password %><%= form.password_field :password, required: true, autocomplete: 'current-password' %></div>
+    <%= form.submit 'Sign in', class: 'button button-dark' %><% end %></section>
