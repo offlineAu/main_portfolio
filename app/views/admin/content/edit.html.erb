@@ -1,0 +1,7 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">CONTENT STUDIO</p>
+    <h1>Edit <%= @resource.singularize %></h1>
+  </div>
+  <% if @record.is_a?(Project) %><%= link_to 'Preview ↗', admin_preview_content_path(resource: @resource, id: @record.slug), class: 'button button-outline' %><% end %></div>
+<%= render 'form' %>

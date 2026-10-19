@@ -1,0 +1,15 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">CONTENT STUDIO</p>
+    <h1><%= @resource.humanize %></h1>
+    <p class="page-subtitle">Lower position numbers appear first.</p>
+  </div>
+  <%= link_to 'Add new +', admin_new_content_path(resource: @resource), class: 'button button-dark' %></div>
+<section class="panel content-list"><% @records.each do |record| %>
+    <div class="content-row">
+      <div><strong><%= record.respond_to?(:name) ? record.name : record.role %></strong><small>Position <%= record.position %><%= " · #{record.published? ? 'Published' : 'Draft'}" if record.is_a?(Project) %></small></div>
+      <div class="row-actions"><%= link_to 'Edit', admin_edit_content_path(resource: @resource, id: record.to_param), class: 'text-link' %><%= button_to 'Delete', admin_content_path(resource: @resource, id: record.to_param), method: :delete, class: 'text-link danger', data: { turbo_confirm: 'Delete this content permanently?' } %></div>
+    </div>
+  <% end %><% if @records.empty? %>
+    <p class="muted">Nothing here yet. Add your first entry.</p>
+  <% end %></section>

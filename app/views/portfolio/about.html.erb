@@ -1,0 +1,50 @@
+<% content_for :title, 'About & skills' %>
+<div class="page-heading">
+  <div>
+    <h1>About & skills</h1>
+  </div>
+</div>
+<div class="about-grid">
+  <section class="panel about-copy">
+    <p class="eyebrow">HELLO, I’M <%= @profile.handle.upcase %></p>
+    <h2><%= @profile.title %></h2>
+    <%= simple_format @profile.about %>
+    <div class="location"><%= icon('pin') %><%= @profile.location %></div>
+  </section>
+  <div class="about-portrait"><% if @profile.portrait.attached? %><%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name %><% end %></div>
+</div>
+<section class="skills-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">TECHNOLOGIES</p>
+      <h2>Skills & stack</h2>
+    </div>
+</div>
+  <div class="skills-grid"><% @skills.each do |category, skills| %>
+      <section class="panel skill-group"><span class="square-icon"><%= icon(category_glyph(category)) %></span>
+        <h3><%= category %></h3>
+        <% skills.each do |skill| %>
+          <div class="skill-item"><span class="skill-icons"><%= skill_icons(skill.name) %></span>
+            <div><strong><%= skill.name %></strong>
+              <p><%= skill.note %></p>
+            </div></div>
+        <% end %></section>
+    <% end %></div>
+</section>
+<div class="about-bottom">
+  <section class="note-card">
+    <h2>Current focus</h2>
+    <ul class="plain-list"><% @profile.focus.to_s.lines.reject(&:blank?).each do |focus| %>
+        <li><%= icon('target') %><span><%= focus %></span></li>
+      <% end %></ul>
+  </section>
+  <section class="panel">
+    <% if @profile.education.present? %>
+      <h2><%= icon('graduation') %>Education</h2>
+      <%= simple_format @profile.education %>
+    <% end %>
+    <% if @profile.credentials.present? %>
+    <h2><%= icon('award') %>Credentials</h2>
+    <%= simple_format @profile.credentials %>
+    <% end %></section>
+</div>

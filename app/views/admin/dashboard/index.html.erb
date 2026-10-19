@@ -1,0 +1,20 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">CONTENT STUDIO</p>
+    <h1>Content studio</h1>
+    <p class="page-subtitle">Manage projects, profile details, skills, and experience.</p>
+  </div>
+  <%= link_to 'Add a project +', admin_new_content_path(resource: 'projects'), class: 'button button-dark' %></div>
+<div class="admin-stats">
+  <div class="panel"><strong><%= @projects.count %></strong><span>Projects</span></div>
+  <div class="panel"><strong><%= @projects.published.count %></strong><span>Published</span></div>
+  <div class="panel"><strong><%= @projects.where(published: false).count %></strong><span>Drafts</span></div>
+</div>
+<section class="panel">
+  <h2>Projects at a glance</h2>
+  <div class="content-list"><% @projects.each do |project| %>
+      <div class="content-row">
+        <div><strong><%= project.name %></strong><small><%= project.published? ? 'Published' : 'Draft' %> · <%= project.status %></small></div>
+        <%= link_to 'Edit →', admin_edit_content_path(resource: 'projects', id: project.slug), class: 'text-link' %></div>
+    <% end %></div>
+</section>

@@ -1,0 +1,193 @@
+/* Content studio. Shares tokens and components with base.css. */
+.admin-header {
+  height: var(--topbar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter);
+  background: var(--night);
+  color: var(--on-night);
+  border-bottom: 1px solid var(--night-line);
+  gap: 20px;
+}
+.admin-brand {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.admin-header nav {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  font-size: 14px;
+}
+.admin-header .text-link:hover,
+.admin-header nav a:hover {
+  color: #ffb596;
+}
+.admin-layout {
+  display: flex;
+  max-width: 1440px;
+  margin: auto;
+}
+.admin-nav {
+  width: 220px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.admin-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.admin-nav a .icon {
+  width: 18px;
+  height: 18px;
+}
+.admin-nav a:hover {
+  background: var(--peach);
+  color: var(--ink);
+}
+.admin-nav a.active {
+  background: var(--ink);
+  color: #fffaf5;
+}
+.admin-content {
+  padding: 40px var(--gutter) 64px 24px;
+  flex: 1;
+  min-width: 0;
+}
+.admin-content .page-heading h1 {
+  font-size: clamp(36px, 4vw, 56px);
+}
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.admin-stats strong {
+  display: block;
+  font-family: var(--display);
+  font-size: 56px;
+  line-height: 1;
+}
+.admin-stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 10px;
+}
+.content-list {
+  margin-top: 12px;
+}
+.content-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.content-row:last-child {
+  border: 0;
+}
+.content-row strong {
+  font-size: 16px;
+}
+.content-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.row-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.upload-fields {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 32px 0;
+}
+.upload-fields legend {
+  font-weight: 600;
+  padding: 0 8px;
+}
+.upload-fields .muted {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.upload-fields .field + .field {
+  margin-top: 28px;
+}
+.upload-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 10px;
+}
+.upload-previews img {
+  width: 160px;
+  height: 110px;
+  object-fit: contain;
+  background: var(--peach);
+  border-radius: 8px;
+}
+.login-card {
+  max-width: 480px;
+  margin: 32px auto;
+  padding: 40px;
+}
+.login-card h1 {
+  font-size: 48px;
+}
+.login-card > .muted {
+  font-size: 15px;
+  margin-top: 12px;
+}
+.login-card .editor-form {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.login-card .button {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-nav {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 20px var(--gutter) 0;
+  }
+  .admin-content {
+    padding: 28px var(--gutter) 48px;
+  }
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+  .admin-header nav {
+    gap: 16px;
+  }
+  .content-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

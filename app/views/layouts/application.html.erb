@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= page_title %> · <%= @profile.short_name %> — <%= @profile.title %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= content_for(:description).presence || @profile.introduction %>">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<%= page_title %> · <%= @profile.short_name %>">
+    <meta property="og:description" content="<%= content_for(:description).presence || @profile.introduction %>">
+    <meta property="og:url" content="<%= ENV.fetch('APP_URL', request.base_url).chomp('/') + request.path %>">
+    <meta property="og:image" content="<%= ENV.fetch('APP_URL', request.base_url).chomp('/') %>/social-card.png">
+    <%= tag.meta name: 'robots', content: 'noindex, nofollow' if @preview %>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;550;600;650;700&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag 'base', 'site', 'data-turbo-track': 'reload' %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <button class="nav-overlay" tabindex="-1" aria-label="Close navigation" data-navigation-target="overlay" data-action="navigation#close" hidden></button>
+    <aside class="sidebar" id="site-navigation" data-navigation-target="drawer" aria-label="Main navigation">
+      <%= link_to root_path, class: 'brand', aria: { label: "#{@profile.short_name} home" } do %>
+        <span class="brand-mark">Au</span>
+        <span class="brand-caption"><%= @profile.title.upcase %></span>
+      <% end %>
+      <button class="drawer-close icon-button" data-action="navigation#close" aria-label="Close navigation"><%= icon('close') %></button>
+      <p class="nav-label">PORTFOLIO</p>
+      <nav class="nav-list">
+        <%= nav_link 'Overview', root_path, 'grid' %>
+        <%= nav_link 'Projects', projects_path, 'folder' %>
+        <%= nav_link 'About & skills', about_path, 'user' %>
+        <%= nav_link 'Experience', experience_path, 'briefcase' %>
+        <%= nav_link 'Contact', contact_path, 'mail' %>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="social-links"><%= link_to icon('github'), @profile.github_url, aria: {label: 'GitHub'}, target: '_blank', rel: 'noopener noreferrer' if @profile.github_url.present? %><%= link_to icon('linkedin'), @profile.linkedin_url, aria: {label: 'LinkedIn'}, target: '_blank', rel: 'noopener noreferrer' if @profile.linkedin_url.present? %><%= mail_to @profile.email, icon('mail'), aria: {label: 'Email'} %></div>
+        <div class="sidebar-person"><span class="avatar-mini">AJ</span><span><strong><%= @profile.short_name %></strong><small><%= @profile.title %></small></span></div>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="header-heading"><button class="mobile-toggle icon-button" data-action="navigation#open" data-navigation-target="trigger" aria-controls="site-navigation" aria-expanded="false" aria-label="Open navigation"><%= icon('menu') %></button><span class="breadcrumb">My portfolio <span>/</span> <strong><%= page_title %></strong></span></div>
+        <div class="header-actions"><span class="availability"><%= @profile.availability %></span><%= mail_to @profile.email, class: 'button button-small' do %>Get in touch <%= icon('arrow') %><% end %></div>
+      </header>
+      <main class="main-content" id="main-content" tabindex="-1">
+        <% if @preview %>
+          <div class="flash notice">Private preview · <%= @project.published? ? 'Published' : 'Draft — visible only to you' %> <%= link_to 'Back to editor', admin_edit_content_path(resource: 'projects', id: @project.slug) %></div>
+        <% end %>
+        <%= yield %>
+        <footer class="page-footer"><span>© <%= Date.current.year %> <%= @profile.short_name %></span><span>Ruby on Rails</span></footer>
+      </main>
+    </div>
+  </body>
+</html>
