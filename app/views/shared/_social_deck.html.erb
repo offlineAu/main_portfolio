@@ -1,0 +1,17 @@
+<div class="verse-deck" id="social-deck" role="dialog" aria-modal="true" aria-label="Social links" data-verse-target="deck" inert>
+  <button type="button" class="verse-close" data-verse-target="close" data-action="verse#close" aria-label="Close social cards"><%= icon('close') %></button>
+  <% cards.each do |card| %>
+    <article class="verse-card verse-card-<%= card[:key] %>" data-verse-target="card" data-action="click->verse#deal">
+      <span class="verse-card-icon"><%= icon(card[:icon]) %></span>
+      <div class="verse-card-text">
+        <p class="verse-card-kicker"><%= card[:label] %></p>
+        <p class="verse-card-handle"><%= card[:handle] %></p>
+      </div>
+      <%= link_to card[:url], class: 'verse-card-link', **(card[:external] ? { target: '_blank', rel: 'noopener noreferrer' } : {}) do %>Open <%= card[:label] %><%= icon('external') %><% end %>
+    </article>
+  <% end %>
+  <div class="verse-footer">
+    <p data-verse-target="footerText">Click the front card to see the next one.</p>
+    <button type="button" class="verse-next" data-verse-target="next" data-action="verse#advance">Next card <%= icon('arrow') %></button>
+  </div>
+</div>

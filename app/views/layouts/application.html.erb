@@ -19,7 +19,7 @@
     <%= stylesheet_link_tag 'base', 'site', 'data-turbo-track': 'reload' %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation">
+  <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation verse">
     <a class="skip-link" href="#main-content">Skip to content</a>
     <button class="nav-overlay" tabindex="-1" aria-label="Close navigation" data-navigation-target="overlay" data-action="navigation#close" hidden></button>
     <aside class="sidebar" id="site-navigation" data-navigation-target="drawer" aria-label="Main navigation">
@@ -37,7 +37,10 @@
         <%= nav_link 'Contact', contact_path, 'mail' %>
       </nav>
       <div class="sidebar-bottom">
-        <div class="social-links"><%= link_to icon('github'), @profile.github_url, aria: {label: 'GitHub'}, target: '_blank', rel: 'noopener noreferrer' if @profile.github_url.present? %><%= link_to icon('linkedin'), @profile.linkedin_url, aria: {label: 'LinkedIn'}, target: '_blank', rel: 'noopener noreferrer' if @profile.linkedin_url.present? %><%= mail_to @profile.email, icon('mail'), aria: {label: 'Email'} %></div>
+        <%= link_to contact_path, class: 'verse-trigger', data: { verse_target: 'trigger', action: 'verse#toggle' }, aria: { haspopup: 'dialog', expanded: 'false', controls: 'social-deck' } do %>
+          <span class="verse-tile"><%= icon('share') %><i class="verse-badge" aria-hidden="true"></i></span>
+          <span class="verse-label">Find me online<small>GitHub · LinkedIn · Email</small></span>
+        <% end %>
         <div class="sidebar-person"><span class="avatar-mini">AJ</span><span><strong><%= @profile.short_name %></strong><small><%= @profile.title %></small></span></div>
       </div>
     </aside>
@@ -54,5 +57,6 @@
         <footer class="page-footer"><span>© <%= Date.current.year %> <%= @profile.short_name %></span><span>Ruby on Rails</span></footer>
       </main>
     </div>
+    <%= render 'shared/social_deck', cards: social_cards(@profile) %>
   </body>
 </html>
