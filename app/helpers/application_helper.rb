@@ -30,6 +30,7 @@ module ApplicationHelper
       "zap" => '<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
       "users" => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
       "linkedin" => '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/>',
+      "share" => '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>',
       "target" => '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
       "shield" => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
       "network" => '<rect x="3" y="3" width="8" height="8" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect x="13" y="13" width="8" height="8" rx="2"/>',
@@ -86,6 +87,17 @@ module ApplicationHelper
     when /automation/i then "zap"
     else "folder"
     end
+  end
+
+  # Cards for the socials deck in the sidebar: one per contact channel the profile fills in.
+  def social_cards(profile)
+    handle = ->(url) { URI.parse(url).path.split("/").reject(&:blank?).last.to_s }
+    [
+      (profile.github_url.present? && { key: "github", label: "GitHub", handle: "@#{handle.(profile.github_url)}", url: profile.github_url, icon: "github", external: true }),
+      (profile.linkedin_url.present? && { key: "linkedin", label: "LinkedIn", handle: handle.(profile.linkedin_url), url: profile.linkedin_url, icon: "linkedin", external: true }),
+      (profile.email.present? && { key: "mail", label: "Email", handle: profile.email, url: "mailto:#{profile.email}", icon: "mail", external: false }),
+      (profile.website_url.present? && { key: "web", label: "Website", handle: URI.parse(profile.website_url).host, url: profile.website_url, icon: "globe", external: true }),
+    ].select(&:itself)
   end
 
   def page_title

@@ -234,3 +234,22 @@ test("content studio is accessible on desktop and mobile", async ({ page }) => {
     }
   }
 });
+
+test("socials deck deals cards, links to the real profiles, and closes with Escape", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const trigger = page.getByRole("button", { name: /Find me online/ });
+  await trigger.click();
+  const deck = page.getByRole("dialog", { name: "Social links" });
+  await expect(deck).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close social cards" })).toBeFocused();
+  const frontLink = deck.locator(".verse-card:not([inert]) .verse-card-link");
+  await expect(frontLink).toHaveAttribute("href", /github\.com/);
+  await page.getByRole("button", { name: /Next card/ }).click();
+  await expect(frontLink).toHaveAttribute("href", /linkedin\.com\/in\/airljoriz/);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#social-deck")).not.toHaveClass(/is-open/);
+  await expect(page.locator("#social-deck")).toHaveAttribute("inert", "");
+  await expect(trigger).toBeFocused();
+});
