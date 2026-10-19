@@ -62,6 +62,29 @@ The browser suite uses a separate `airl_portfolio_browser` database and a test-o
 
 Tests use a separate database and cover public routes and filters, owner access, editing, draft previews, publication, image access/removal, validation, stable slugs, and repeatable seeding. Production boot can be checked locally using `ACTIVE_STORAGE_SERVICE=local`, a development-machine database URL, and a temporary `SECRET_KEY_BASE`; production normally uses the bucket configuration below.
 
+## Vercel deployment
+
+`vercel.json` explicitly routes all requests to the `portfolio` container service,
+built from `Dockerfile.vercel`. `.vercelignore` excludes local secrets, uploads,
+logs, and development caches from the deployment upload.
+
+1. Link the existing project with `vercel link --project portfolio-au`.
+2. Configure `RAILS_ENV=production`, `PORT=3000`, `APP_URL` (the deployment's HTTPS
+   origin), `SECRET_KEY_BASE` (generate with `bin/rails secret`), and `DATABASE_URL`
+   for an externally accessible PostgreSQL database.
+3. Configure a private S3-compatible bucket using `ACTIVE_STORAGE_SERVICE=amazon`,
+   `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_ENDPOINT`, and
+   `S3_REGION`. Use separate database and storage resources for previews.
+4. In a trusted terminal with the production variables loaded, run
+   `RAILS_ENV=production bin/rails db:prepare` and then
+   `RAILS_ENV=production bin/rails owner:setup`. Run database migrations separately
+   for later releases too; Vercel does not execute `railway.json` pre-deploy hooks.
+5. Run `vercel deploy` for a preview. Verify `/up`, public pages, sign-in, and
+   uploads before running `vercel deploy --prod`.
+
+Vercel's container runtime is in beta. The Dockerfile precompiles Rails assets;
+the legacy npm and Composer build commands are not used by the container service.
+
 ## Railway deployment
 
 The repository includes a production Dockerfile and `railway.json`. Deployment has not been performed automatically.
