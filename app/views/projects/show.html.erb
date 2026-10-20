@@ -1,5 +1,7 @@
 <% content_for :title, @project.name %>
 <% content_for :description, @project.tagline %>
+<% story = @project.slug == 'veloce' %>
+<% chapters = [['The problem', @project.problem, 'the-problem'], ['My contribution', @project.contribution, 'my-contribution'], ['Under the hood', @project.implementation, 'under-the-hood']].select { |_, body, _| body.present? } %>
 <div class="case-heading"><%= link_to projects_path, class: 'back-link' do %>← All projects<% end %>
   <div class="case-title-row">
     <div>
@@ -10,7 +12,7 @@
     <div class="case-links"><%= link_to @project.source_url, class: 'button button-dark', target: '_blank', rel: 'noopener noreferrer' do %><%= icon('github') %>View source<% end if @project.source_url.present? %><%= link_to @project.live_url, class: 'button button-outline', target: '_blank', rel: 'noopener noreferrer' do %>Live project <%= icon('external') %><% end if @project.live_url.present? %></div>
   </div>
 </div>
-<%= render 'shared/project_art', project: @project, large: true %>
+<%= render 'shared/project_art', project: @project, large: true unless story %>
 <div class="case-facts">
   <div><small><%= icon('user') %>MY ROLE</small><strong><%= @project.role %></strong></div>
   <div><small><%= icon('layers') %>PROJECT TYPE</small><strong><%= @project.category %></strong></div>
@@ -19,7 +21,7 @@
   <% end %>
   <div class="case-stack"><small><%= icon('code') %>BUILT WITH</small><div class="tags"><% @project.technologies.each do |technology| %><span><%= tech_icon(technology) %><%= technology %></span><% end %></div></div>
 </div>
-<div class="case-body">
+<div class="case-body <%= 'case-body-story' if story %>">
   <section>
     <p class="eyebrow">OVERVIEW</p>
     <h2>Project overview</h2>
@@ -28,19 +30,43 @@
           <li><%= icon('check') %><%= highlight %></li>
         <% end %></ul>
     <% end %></section>
-  <div><% [['The problem', @project.problem], ['My contribution', @project.contribution], ['Under the hood', @project.implementation]].each do |heading, body| %><% if body.present? %>
-        <section class="case-section">
-          <h2><%= heading %></h2>
-          <%= simple_format body %></section>
-      <% end %><% end %></div>
+  <% unless story %>
+    <div><% chapters.each do |heading, body, id| %>
+      <section class="case-section"><h2><%= heading %></h2><%= simple_format body %></section>
+    <% end %></div>
+  <% end %>
 </div>
+<% if story %>
+  <%= render 'projects/veloce_story' %>
+  <div class="case-behind">
+    <header class="case-behind-heading"><p class="eyebrow">BEHIND THE BUILD</p><h2>The thinking behind Veloce</h2></header>
+    <% chapters.each_with_index do |(heading, body, id), index| %>
+      <% detail = veloce_case(id) %>
+      <section class="case-detail" id="<%= id %>" aria-labelledby="<%= id %>-title">
+        <p class="eyebrow">0<%= index + 1 %></p>
+        <h3 id="<%= id %>-title"><%= heading %></h3>
+        <div class="case-detail-lede"><%= simple_format body %><% if detail %><p><%= detail[:intro] %></p><% end %></div>
+        <% if detail %>
+          <ul class="case-detail-grid"><% detail[:items].each do |title, text| %>
+            <li><strong><%= title %></strong><span><%= text %></span></li>
+          <% end %></ul>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+<% end %>
 <% if @project.gallery.attached? %>
   <section class="case-gallery">
     <div class="section-heading">
       <h2>Inside the project</h2>
     </div>
     <% @project.ordered_gallery.each do |attachment| %>
-      <figure><%= image_tag media_path_for(attachment), alt: @project.gallery_alt_for(attachment), loading: 'lazy' %></figure>
+      <% metadata = attachment.blob.metadata %>
+      <% ratio = metadata['width'].to_i > 0 && metadata['height'].to_i > 0 ? "#{metadata['width'].to_i} / #{metadata['height'].to_i}" : '16 / 10' %>
+      <figure class="gallery-image" data-controller="image-load" style="aspect-ratio: <%= ratio %>">
+        <%= image_tag media_path_for(attachment), alt: @project.gallery_alt_for(attachment), loading: 'lazy', data: { image_load_target: 'image' } %>
+        <span class="image-fallback" data-image-load-target="fallback" hidden>Image unavailable</span>
+      </figure>
     <% end %></section>
 <% end %>
 <section class="contact-banner">

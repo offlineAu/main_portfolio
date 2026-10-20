@@ -12,10 +12,9 @@
 }
 .admin-brand {
   font-family: var(--display);
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: -0.01em;
 }
 .admin-header nav {
   display: flex;

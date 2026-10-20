@@ -1,0 +1,33 @@
+<% steps = veloce_story.flat_map { |act| act[:steps].map { |step| step.merge(act: act[:id]) } } %>
+<div class="case-story" data-controller="story">
+  <aside class="story-visual" aria-label="Veloce screenshots and chapters">
+    <div class="story-stage">
+      <% steps.each_with_index do |step, index| %>
+        <%= image_tag "veloce/#{step[:image]}.webp", alt: step[:alt], width: 1800, height: step[:ratio] == '4 / 3' ? 1350 : 1125,
+                      loading: index.zero? ? 'eager' : 'lazy', class: 'story-frame', data: { story_target: 'frame', frame: step[:image] } %>
+      <% end %>
+    </div>
+    <nav class="story-chapters" aria-label="Case study chapters">
+      <% veloce_story.each do |act| %>
+        <%= link_to act[:title], "##{act[:id]}", data: { story_target: 'link', act: act[:id] } %>
+      <% end %>
+    </nav>
+  </aside>
+  <div class="story-narrative">
+    <% veloce_story.each_with_index do |act, number| %>
+      <section class="story-act" id="<%= act[:id] %>" aria-labelledby="<%= act[:id] %>-title">
+        <p class="eyebrow">CHAPTER <%= number + 1 %></p>
+        <h2 id="<%= act[:id] %>-title"><%= act[:title] %></h2>
+        <% act[:steps].each do |step| %>
+          <article class="story-step" data-story-target="chapter" data-frame="<%= step[:image] %>" data-act="<%= act[:id] %>">
+            <h3><%= step[:heading] %></h3>
+            <p><%= step[:body] %></p>
+            <figure class="story-inline" style="aspect-ratio: <%= step[:ratio] %>">
+              <%= image_tag "veloce/#{step[:image]}.webp", alt: step[:alt], width: 1800, height: step[:ratio] == '4 / 3' ? 1350 : 1125, loading: 'lazy' %>
+            </figure>
+          </article>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+</div>

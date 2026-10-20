@@ -42,6 +42,16 @@ The Veloce cover is a genuine capture of its public Vercel homepage, verified Oc
 
 ## Checks
 
+Public pages use Turbo navigation progress, filter submission feedback, and image
+loading/failure states. Page navigation fades the outgoing content and lifts the
+next page into place, with an animated Au badge when a visit takes over 240ms.
+The sidebar stays anchored, history restoration keeps its scroll position, and
+reduced motion disables the page and badge animations.
+Overview and Projects reveal cards as they enter view;
+Veloce uses a sticky screenshot story on desktop and inline images on mobile.
+The new reveals and story transitions respect reduced motion and remain readable
+without JavaScript. Motion controllers clean up when Turbo caches or replaces a page.
+
 ```sh
 bin/rails test
 bin/rails zeitwerk:check

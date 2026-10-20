@@ -104,8 +104,7 @@ export default class extends Controller {
   render({ toggle, immediate = false }) {
     const cards = this.cardTargets;
     const count = cards.length;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = immediate || reduced ? 0 : toggle ? 0.9 : 0.6;
+    const duration = immediate ? 0 : toggle ? 0.9 : 0.6;
     const ease = toggle ? TOGGLE_EASE : DEAL_EASE;
     cards.forEach((card, index) => {
       const order = this.isOpen ? index : count - 1 - index;

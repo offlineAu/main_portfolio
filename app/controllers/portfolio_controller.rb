@@ -1,6 +1,6 @@
 class PortfolioController < ApplicationController
   def overview
-    @projects = Project.published.ordered
+    @projects = Project.published.ordered.with_attached_cover
     @featured = @projects.featured.first || @projects.first
     @recent = @projects.where.not(id: @featured&.id).limit(2)
     @experiences = Experience.ordered.limit(2)

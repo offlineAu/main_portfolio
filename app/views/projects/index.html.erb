@@ -6,9 +6,9 @@
     <p class="page-subtitle">A collection of web apps, mobile experiences, and practical automation.</p>
   </div>
   <span class="count-label"><%= Project.published.count %> selected projects</span></div>
-<%= form_with url: projects_path, method: :get, class: 'filter-bar' do |form| %><%= form.label :technology, 'Explore the stack' %><%= form.select :technology, options_for_select([['All technologies', '']] + @technologies.map { |name| [name, name] }, @technology) %><%= form.submit 'Filter projects', class: 'button button-small button-dark' %><%= link_to 'Reset', projects_path, class: 'text-link' if @technology.present? %><% end %>
+<%= form_with url: projects_path, method: :get, class: 'filter-bar', data: { controller: 'loading', action: 'turbo:submit-start->loading#start turbo:submit-end->loading#end turbo:before-fetch-response->loading#response' } do |form| %><%= form.label :technology, 'Explore the stack' %><%= form.select :technology, options_for_select([['All technologies', '']] + @technologies.map { |name| [name, name] }, @technology) %><%= form.submit 'Filter projects', class: 'button button-small button-dark', data: { loading_target: 'submit' } %><%= link_to 'Reset', projects_path, class: 'text-link' if @technology.present? %><span class="filter-status" role="status" data-loading-target="status"></span><% end %>
 <% if @projects.any? %>
-  <div class="projects-grid"><% @projects.each do |project| %><%= render 'shared/project_card', project: project, featured: false %><% end %></div>
+  <div class="projects-grid" data-controller="reveal"><% @projects.each do |project| %><%= render 'shared/project_card', project: project, featured: false %><% end %></div>
 <% else %>
   <div class="empty-state">
     <h2>No projects with that technology yet.</h2>
