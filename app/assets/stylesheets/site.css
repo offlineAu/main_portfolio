@@ -1,5 +1,78 @@
 /* Public site: dark chrome (sidebar, topbar, hero) framing light editorial pages. */
 
+/* Navigation feedback floats above either page palette without covering content. */
+.navigation-loader {
+  position: fixed;
+  left: calc(50% + var(--sidebar) / 2);
+  bottom: 28px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 20px 10px 10px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: var(--night-2);
+  color: var(--on-night);
+  box-shadow: 0 12px 40px rgb(14 10 8 / 22%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 12px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 260ms cubic-bezier(.22, 1, .36, 1), visibility 180ms;
+}
+.navigation-loader.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+.navigation-loader-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  font: italic 24px var(--serif);
+}
+.navigation-loader-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-top-color: var(--glow);
+  border-right-color: var(--glow);
+  border-radius: 50%;
+}
+.navigation-loader-copy { font-size: 13px; }
+.navigation-loader-dots { display: flex; gap: 4px; }
+.navigation-loader-dots i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--glow);
+}
+.navigation-loader.is-visible .navigation-loader-mark::after {
+  animation: navigation-orbit 1100ms linear infinite;
+}
+.navigation-loader.is-visible .navigation-loader-dots i {
+  animation: navigation-pulse 900ms ease-in-out infinite alternate;
+}
+.navigation-loader-dots i:nth-child(2) { animation-delay: 150ms; }
+.navigation-loader-dots i:nth-child(3) { animation-delay: 300ms; }
+@keyframes navigation-orbit { to { transform: rotate(360deg); } }
+@keyframes navigation-pulse { from { opacity: .3; } to { opacity: 1; } }
+@media (max-width: 1023px) {
+  .navigation-loader { left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .navigation-loader { transition: none; transform: translateX(-50%); }
+  .navigation-loader.is-visible { transform: translateX(-50%); }
+  .navigation-loader.is-visible .navigation-loader-mark::after,
+  .navigation-loader.is-visible .navigation-loader-dots i { animation: none; }
+}
+
 /* Shell */
 .sidebar {
   position: fixed;
@@ -19,9 +92,10 @@
   display: block;
 }
 .brand-mark {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 56px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 60px;
   line-height: 1;
   letter-spacing: -0.02em;
   color: #fff;
@@ -107,7 +181,7 @@
 }
 .topbar {
   height: var(--topbar);
-  background: rgb(14 10 8 / 92%);
+  background: #110c0a;
   color: var(--on-night);
   border-bottom: 1px solid var(--night-line);
   display: flex;
@@ -117,7 +191,6 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(14px);
 }
 .header-heading {
   display: flex;
@@ -179,6 +252,11 @@
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
+}
+/* Keep the hero's backdrop dark while the whole main element fades or moves.
+   Otherwise its transparent entrance exposes the default light body canvas. */
+body.home {
+  background: var(--night);
 }
 .home .main-content {
   padding: 0;
@@ -245,26 +323,58 @@
   width: 16px;
   height: 16px;
 }
+/* Layered serif lockup (after Bazil): the upright first name is solid behind the portrait, with an identical
+   outline copy in front; over the background the stroke lands on the solid letter edges and disappears, so the
+   outline only shows where the letters cross the portrait. The italic surname is outline only, with one copy in
+   front and one behind; the front copy dissolves after the entrance, so the surname sinks behind the portrait.
+   The h1 has no z-index of its own, so each layer joins the hero's stack. */
 .hero-name {
+  --name-ink: #f3e9e1;
   position: absolute;
-  top: 12%;
+  inset: 0;
+  margin: 0;
+  pointer-events: none;
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(72px, min(17cqw, 26svh), 300px);
+  line-height: 0.88;
+  letter-spacing: -0.025em;
+}
+.hero-name-line {
+  position: absolute;
   left: 0;
   right: 0;
-  z-index: -2;
-  text-align: center;
-  font-weight: 800;
-  font-size: clamp(88px, 19cqw, 340px);
-  line-height: 0.86;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
+  /* Room for italic overhangs and descenders. */
+  padding: 0.04em 0.2em 0.16em;
+  white-space: nowrap;
+  will-change: transform;
 }
-.hero-name span {
-  display: block;
-  background: linear-gradient(180deg, rgb(255 236 224 / 62%) 0%, rgb(255 236 224 / 10%) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.hero-name-first {
+  top: 14%;
+  z-index: -2;
+  color: var(--name-ink);
+}
+.hero-name-last {
+  top: calc(14% + 0.8em);
+  z-index: -2;
+  font-style: italic;
+  font-size: 1.02em;
+  letter-spacing: -0.015em;
+}
+.hero-name-outline {
   color: transparent;
+  -webkit-text-stroke: 1.25px var(--name-ink);
+}
+.hero-name-front {
+  z-index: 1;
+}
+.hero-word {
+  display: inline-block;
+}
+.hero-char {
+  display: inline-block;
+  transform-origin: 50% 100%;
 }
 .hero-portrait {
   position: absolute;
@@ -275,22 +385,29 @@
   width: auto;
   max-width: none;
   transform: translateX(-50%);
-  -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 36%;
+  z-index: -1;
+  background: linear-gradient(180deg, transparent, rgb(14 10 8 / 88%));
+  pointer-events: none;
 }
 .hero-intro {
   position: absolute;
   left: var(--gutter);
-  bottom: 150px;
-  max-width: min(32ch, 30%);
-  font-size: clamp(18px, 1.8cqw, 26px);
-  line-height: 1.4;
+  bottom: 140px;
+  max-width: min(36ch, 30%);
+  font-size: clamp(16px, 1.3cqw, 19px);
+  line-height: 1.45;
   color: var(--on-night);
 }
 .hero-cta {
   position: absolute;
   right: var(--gutter);
-  bottom: 150px;
+  bottom: 140px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -313,8 +430,25 @@
   right: 0;
   bottom: 32px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  contain: paint;
+}
+.marquee::before,
+.marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9%;
+  z-index: 1;
+  pointer-events: none;
+}
+.marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, #0e0a08, transparent);
+}
+.marquee::after {
+  right: 0;
+  background: linear-gradient(270deg, #0e0a08, transparent);
 }
 .marquee-track {
   display: flex;
@@ -323,6 +457,10 @@
   padding: 0;
   list-style: none;
   animation: marquee 46s linear infinite;
+  will-change: transform;
+}
+.marquee.is-paused .marquee-track {
+  animation-play-state: paused;
 }
 .marquee-track li {
   margin-right: 14px;
@@ -382,7 +520,8 @@
 }
 .stats dd {
   font-family: var(--display);
-  font-weight: 700;
+  font-weight: 400;
+  letter-spacing: -0.02em;
   font-size: clamp(44px, 5vw, 72px);
   line-height: 1;
   color: var(--ink);
@@ -523,11 +662,10 @@
 .art-word > span {
   display: block;
   font-family: var(--display);
-  font-weight: 800;
-  font-size: clamp(48px, 8vw, 112px);
+  font-weight: 400;
+  font-size: clamp(52px, 8.6vw, 120px);
   line-height: 0.9;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
 .art-word > small {
   display: block;
@@ -577,9 +715,9 @@
 }
 .project-title-link h3 {
   font-family: var(--display);
-  font-size: clamp(28px, 2.6vw, 40px);
-  font-weight: 700;
-  letter-spacing: -0.005em;
+  font-size: clamp(30px, 2.8vw, 42px);
+  font-weight: 400;
+  letter-spacing: -0.015em;
   line-height: 1.05;
 }
 .project-featured .project-title-link h3 {
@@ -840,8 +978,8 @@
 }
 .skill-group h3 {
   font-family: var(--display);
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 400;
   margin-bottom: 12px;
 }
 .skill-item {
@@ -1053,6 +1191,8 @@
   overflow: hidden;
   pointer-events: none;
   color: #fff;
+  visibility: hidden;
+  transition: visibility 0s linear 1.3s;
 }
 .verse-deck::before {
   content: "";
@@ -1060,13 +1200,14 @@
   inset: 0;
   background:
     radial-gradient(50% 50% at 50% 50%, rgb(214 92 40 / 28%), transparent 75%),
-    rgb(14 10 8 / 90%);
-  backdrop-filter: blur(10px);
+    rgb(14 10 8 / 94%);
   opacity: 0;
   transition: opacity 0.5s;
 }
 .verse-deck.is-open {
   pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0s;
 }
 .verse-deck.is-open::before {
   opacity: 1;
@@ -1105,8 +1246,7 @@
   padding: 26px;
   border-radius: 20px;
   user-select: none;
-  box-shadow: 0 0 60px 10px rgb(0 0 0 / 35%);
-  will-change: transform;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 45%);
 }
 .verse-card:not([inert]) {
   cursor: pointer;
@@ -1155,8 +1295,8 @@
 .verse-card-handle {
   margin-top: 6px;
   font-family: var(--display);
-  font-weight: 700;
-  font-size: clamp(28px, 4.2svh, 38px);
+  font-weight: 400;
+  font-size: clamp(30px, 4.4svh, 40px);
   line-height: 1.05;
   overflow-wrap: anywhere;
 }
@@ -1385,8 +1525,14 @@
     min-height: 840px;
   }
   .hero-name {
+    font-size: clamp(56px, 19cqw, 170px);
+  }
+  .hero-name-first {
     top: 8%;
-    font-size: clamp(64px, 25cqw, 200px);
+  }
+  /* The portrait is shorter here, so the surname stacks straight under the first name, above the face. */
+  .hero-name-last {
+    top: calc(8% + 0.8em);
   }
   .hero-portrait {
     height: 62%;
@@ -1431,23 +1577,288 @@
     height: 240px;
   }
 }
+/* Only incidental hover effects honour the OS "reduce motion" flag. The skills marquee and the socials
+   deck keep animating: Windows reports "animations off" on many low-end PCs, and those visitors should
+   still get the full experience. Both are cheap (transform/opacity only) and the marquee pauses off-screen. */
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track {
-    animation: none;
-  }
-  .marquee {
-    overflow-x: auto;
-  }
   .project-art,
   .project-title-link > .icon,
   .contact-link,
-  .verse-tile,
-  .verse-deck::before,
-  .verse-close,
-  .verse-footer {
+  .verse-tile {
     transition: none;
   }
   .project-card:hover .project-art {
     transform: none;
   }
+}
+
+/* First-visit preloader: only exists visually while the head script has set html.is-preloading.
+   Sequence: labels rise in, then the sheet catches fire over the hero portrait and burns open while the digits
+   roll and the words cycle; at 100 the rest burns away (see effects/paper_burn.js). */
+.preloader {
+  display: none;
+}
+.is-preloading body {
+  overflow: hidden;
+}
+.is-preloading .preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(20px, 3vw, 40px) var(--gutter) clamp(28px, 4vw, 52px);
+  background: var(--canvas);
+  color: var(--ink);
+  overflow: hidden;
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 760ms var(--ease-wipe) 900ms,
+    background-color 700ms ease 150ms;
+}
+.preloader-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 32px;
+}
+.preloader-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+}
+.preloader-mask > * {
+  display: block;
+  transition: transform 560ms var(--ease-wipe);
+}
+.is-preloading .preloader-mask > * {
+  animation: preloader-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.preloader-row > :nth-child(2) > * { animation-delay: 80ms; }
+.preloader-row > :nth-child(3) > * { animation-delay: 160ms; }
+.preloader-row-bottom > :nth-child(1) > * { animation-delay: 220ms; }
+.preloader-row-bottom > :nth-child(2) > * { animation-delay: 300ms; }
+@keyframes preloader-rise {
+  from { transform: translateY(110%); }
+}
+.preloader-mask-count {
+  margin-left: auto;
+}
+.preloader-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.preloader-line {
+  font-size: clamp(24px, 2.8vw, 40px);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+.preloader-words {
+  display: inline-block;
+  height: 1.1em;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-right: 0.15em;
+}
+.preloader-words-track {
+  display: block;
+  transform: translateY(calc(var(--word, 0) * -1.1em));
+  transition: transform 520ms var(--ease-wipe);
+}
+.preloader-words em {
+  display: block;
+  height: 1.1em;
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+}
+.preloader-count {
+  display: flex;
+  align-items: flex-start;
+  font-size: clamp(112px, 24vw, 360px);
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+/* Cells are cropped to the figure height (Inter Tight digits are ~0.73em) so the roll reads cleanly. */
+.preloader-digit {
+  display: block;
+  height: 0.78em;
+  max-width: 1em;
+  overflow: hidden;
+  transition: max-width 500ms var(--ease-wipe);
+}
+.preloader-digit.is-blank {
+  max-width: 0;
+}
+.preloader-digit-strip {
+  display: block;
+  transform: translateY(calc(var(--digit, 0) * -0.78em));
+  transition: transform 380ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.preloader-digit-strip > span {
+  display: block;
+  height: 0.78em;
+  line-height: 0.78em;
+}
+.preloader-count sup {
+  margin: 0 0 0 0.08em;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.24em;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.preloader-bar {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--glow);
+  z-index: 2;
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: opacity 400ms ease;
+}
+/* Burn exit: once the WebGL sheet has drawn its first frame it stands in for the DOM paper. */
+.paper-burn {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.paper-burn-sparks {
+  z-index: 3;
+}
+.preloader.is-burning {
+  background-color: transparent;
+  pointer-events: none;
+  transition: none;
+}
+/* A label the fire reaches browns, blurs and crumbles away. */
+.preloader-mask.is-burnt > * {
+  color: #3b1e0d;
+  opacity: 0;
+  filter: blur(4px);
+  transition:
+    color 200ms ease,
+    opacity 500ms ease 150ms,
+    filter 500ms ease 150ms,
+    transform 560ms var(--ease-wipe);
+}
+.preloader.is-leaving .preloader-bar {
+  opacity: 0;
+}
+/* Wipe exit (no WebGL): the sheet dims to the hero's night tone as it lifts away. */
+.preloader.is-wiping {
+  clip-path: inset(0 0 100% 0);
+  background-color: var(--night);
+}
+.preloader.is-leaving .preloader-mask > * {
+  transform: translateY(-110%);
+}
+@media (max-width: 560px) {
+  .preloader-mask-title {
+    display: none;
+  }
+}
+
+/* Loading and scroll motion: content stays visible until controllers opt in. */
+.turbo-progress-bar { height: 3px; background: var(--glow); }
+.filter-status { color: var(--danger); font-size: 14px; }
+.filter-status:empty { display: none; }
+.filter-bar[aria-busy="true"] input[type="submit"] { cursor: wait; opacity: .7; }
+[data-controller~="image-load"] { position: relative; background-color: var(--peach); }
+[data-controller~="image-load"] img { transition: opacity 180ms ease-out; }
+[data-image-state="loading"] img { opacity: 0; }
+.image-fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: var(--muted); background: var(--peach); }
+.image-fallback[hidden], [data-image-load-target="image"][hidden] { display: none; }
+.case-gallery .gallery-image { overflow: hidden; border-radius: 20px; }
+.case-gallery .gallery-image img { display: block; height: 100%; object-fit: contain; }
+
+[data-reveal-target~="item"] {
+  --reveal-y: 32px;
+  --reveal-scale: .96;
+  --reveal-duration: 560ms;
+  --reveal-ease: cubic-bezier(.22, 1.18, .36, 1);
+}
+[data-reveal-variant="featured"] { --reveal-y: 24px; --reveal-scale: .98; --reveal-duration: 600ms; --reveal-rotation: 0deg !important; }
+[data-reveal-variant="text"] { --reveal-y: 16px; --reveal-scale: 1; --reveal-duration: 400ms; --reveal-rotation: 0deg !important; --reveal-ease: ease-out; }
+.reveal-pending { opacity: 0; transform: translateY(var(--reveal-y)) scale(var(--reveal-scale)) rotate(var(--reveal-rotation, 0deg)); }
+.reveal-enter { animation: portfolio-reveal var(--reveal-duration) var(--reveal-ease) var(--reveal-delay, 0ms) both; }
+@keyframes portfolio-reveal {
+  from { opacity: 0; transform: translateY(var(--reveal-y)) scale(var(--reveal-scale)) rotate(var(--reveal-rotation, 0deg)); }
+  to { opacity: 1; transform: none; }
+}
+
+.case-body.case-body-story { display: block; max-width: 72ch; margin-bottom: 48px; }
+.case-behind { max-width: 1040px; margin: clamp(56px, 8vw, 112px) auto 48px; }
+.case-behind-heading { text-align: center; margin-bottom: clamp(32px, 5vw, 64px); }
+.case-behind-heading h2 { font-size: clamp(32px, 4vw, 52px); margin-top: 8px; }
+.case-detail { padding: clamp(28px, 4vw, 48px) 0; border-top: 1px solid var(--line, rgb(0 0 0 / .12)); scroll-margin-top: calc(var(--topbar) + 24px); }
+.case-detail h3 { font-size: clamp(28px, 3vw, 40px); margin-top: 6px; }
+.case-detail-lede { max-width: 68ch; }
+.case-detail-lede p { color: var(--muted); font-size: 18px; margin-top: 14px; }
+.case-detail-lede p:first-child { color: inherit; font-size: clamp(19px, 2vw, 22px); }
+.case-detail-grid { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.case-detail-grid li { display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 16px; background: var(--surface, #f3efe9); border: 1px solid var(--line, rgb(0 0 0 / .08)); }
+.case-detail-grid strong { font-size: 17px; }
+.case-detail-grid span { color: var(--muted); font-size: 15px; line-height: 1.55; }
+.case-story { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
+.story-visual { position: sticky; top: var(--topbar); height: calc(100svh - var(--topbar)); min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.story-stage { display: none; position: relative; aspect-ratio: 16 / 10; max-height: max(180px, calc(100svh - var(--topbar) - 140px)); border-radius: 20px; overflow: hidden; background: var(--surface, #f3efe9); box-shadow: 0 1px 0 rgb(0 0 0 / .04), 0 18px 40px -24px rgb(0 0 0 / .35); }
+.story-live .story-stage { display: block; }
+.story-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transform: scale(.985); transition: opacity 450ms ease, transform 600ms cubic-bezier(.22, 1, .36, 1); }
+.story-frame[data-active] { opacity: 1; transform: none; }
+.story-chapters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin-top: 20px; }
+.story-chapters a { color: var(--muted); border-bottom: 2px solid transparent; padding: 6px 0; font-size: 14px; }
+.story-chapters a[aria-current] { color: var(--accent); border-color: currentColor; }
+.story-narrative { min-width: 0; }
+.story-act { scroll-margin-top: calc(var(--topbar) + 24px); padding-bottom: 24px; }
+.story-act + .story-act { margin-top: 32px; }
+.story-narrative h2 { font-size: clamp(30px, 3vw, 44px); }
+.story-step { min-height: calc(80svh - var(--topbar)); padding: 28px 0; display: flex; flex-direction: column; justify-content: center; scroll-margin-top: calc(var(--topbar) + 24px); }
+.story-step h3 { font-size: clamp(20px, 2vw, 26px); line-height: 1.2; }
+.story-step p { color: var(--muted); font-size: 18px; margin-top: 12px; }
+.story-inline { display: block; margin: 20px 0 0; border-radius: 16px; overflow: hidden; background: var(--surface, #f3efe9); }
+.story-inline img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.story-live .story-inline { display: none; }
+@media (max-width: 1023px) {
+  .case-story { grid-template-columns: minmax(0, 1fr); }
+  .story-visual { position: static; height: auto; display: block; }
+  .story-live .story-stage { display: none; }
+  .story-live .story-inline { display: block; }
+  .story-chapters { justify-content: flex-start; }
+  .story-step { min-height: 0; display: block; }
+}
+@media (max-width: 767px) {
+  [data-reveal-target~="item"] { --reveal-y: 16px; --reveal-rotation: 0deg !important; }
+  [data-reveal-variant="featured"] { --reveal-y: 12px; }
+  [data-reveal-variant="text"] { --reveal-y: 8px; }
+  .reveal-enter { animation-delay: min(var(--reveal-delay, 0ms), 150ms); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pending { opacity: 1; transform: none; }
+  .reveal-enter { animation: none; }
+  [data-controller~="image-load"] img { transition: none; }
+  .case-story { grid-template-columns: minmax(0, 1fr); }
+  .story-visual { position: static; height: auto; display: block; }
+  .story-live .story-stage { display: none; }
+  .story-live .story-inline { display: block; }
+  .story-chapters { justify-content: flex-start; }
+  .story-step { min-height: 0; display: block; }
+  .story-frame { transition: none; }
 }

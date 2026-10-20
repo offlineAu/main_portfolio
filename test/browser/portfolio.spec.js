@@ -2,6 +2,11 @@ const { test, expect } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
 const path = require("path");
 
+// The first-visit preloader has its own spec; everywhere else, start as a returning visitor.
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => sessionStorage.setItem("preloaded", "1"));
+});
+
 test("public pages stay accessible and within the viewport at four sizes", async ({
   page,
 }) => {
@@ -28,6 +33,10 @@ test("public pages stay accessible and within the viewport at four sizes", async
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       ).toBe(true);
+      // Audit settled entrance states rather than a translucent animation frame.
+      await page.evaluate(() => Promise.all(document.getAnimations()
+        .filter(animation => animation.effect.getComputedTiming().iterations !== Infinity)
+        .map(animation => animation.finished.catch(() => {}))));
       const accessibility = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
         .analyze();
@@ -117,7 +126,8 @@ test("owner can create, preview, upload, publish, unpublish, and delete a projec
   await expect(page).toHaveURL(/\/admin$/);
   await page.getByRole("link", { name: "Add a project +" }).click();
   const slug = `browser-project-${Date.now()}`;
-  await page.getByLabel("Name", { exact: true }).fill("Browser QA project");
+  const projectName = `Browser QA project ${slug}`;
+  await page.getByLabel("Name", { exact: true }).fill(projectName);
   await page.getByLabel("Slug", { exact: true }).fill(slug);
   await page
     .getByLabel("Tagline", { exact: true })
@@ -133,7 +143,7 @@ test("owner can create, preview, upload, publish, unpublish, and delete a projec
   await page.getByRole("button", { name: "Save changes" }).click();
   await page
     .locator(".content-row")
-    .filter({ hasText: "Browser QA project" })
+    .filter({ hasText: projectName })
     .getByRole("link", { name: "Edit", exact: true })
     .click();
   await page
@@ -152,6 +162,7 @@ test("owner can create, preview, upload, publish, unpublish, and delete a projec
   await image.evaluate((element) => element.decode());
   const imageUrl = await image.getAttribute("src");
   const anonymous = await browser.newContext();
+  await anonymous.addInitScript(() => sessionStorage.setItem("preloaded", "1"));
   const visitor = await anonymous.newPage();
   expect(
     (await visitor.goto(`http://127.0.0.1:3101/projects/${slug}`)).status(),
@@ -183,7 +194,7 @@ test("owner can create, preview, upload, publish, unpublish, and delete a projec
   page.once("dialog", (dialog) => dialog.accept());
   await page
     .locator(".content-row")
-    .filter({ hasText: "Browser QA project" })
+    .filter({ hasText: projectName })
     .getByRole("button", { name: "Delete" })
     .click();
   await expect(
@@ -252,4 +263,38 @@ test("socials deck deals cards, links to the real profiles, and closes with Esca
   await expect(page.locator("#social-deck")).not.toHaveClass(/is-open/);
   await expect(page.locator("#social-deck")).toHaveAttribute("inert", "");
   await expect(trigger).toBeFocused();
+});
+
+test("skills marquee and socials deck still animate when the OS has animations off", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [375, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const marquee = await page.locator(".marquee").evaluate((element) => ({
+      overflowX: getComputedStyle(element).overflowX,
+      animation: getComputedStyle(element.querySelector(".marquee-track"))
+        .animationName,
+      pageOverflows:
+        document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    }));
+    expect(marquee).toEqual({
+      overflowX: "hidden",
+      animation: "marquee",
+      pageOverflows: false,
+    });
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: /Find me online/ }).click();
+  const card = page.locator(".verse-card:not([inert])");
+  // Mid-sweep the card is still travelling; a disabled animation would already be at rest.
+  const moving = await card.evaluate(async (element) => {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const y = element.getBoundingClientRect().top;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    return element.getBoundingClientRect().top !== y;
+  });
+  expect(moving).toBe(true);
 });

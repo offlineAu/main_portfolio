@@ -1,0 +1,20 @@
+<%# First-visit loader. Hidden unless the head script sets html.is-preloading; Turbo drops it before caching. %>
+<% words = ['selected work', 'web apps', 'mobile apps', 'case studies', 'the portfolio'] %>
+<div class="preloader" aria-hidden="true" data-controller="preloader" data-turbo-temporary>
+  <div class="preloader-row">
+    <span class="preloader-mask"><span class="preloader-label"><%= profile.name %></span></span>
+    <span class="preloader-mask preloader-mask-title"><span class="preloader-label"><%= profile.title %></span></span>
+    <span class="preloader-mask"><span class="preloader-label">Portfolio — <%= Date.current.year %></span></span>
+  </div>
+  <div class="preloader-row preloader-row-bottom">
+    <span class="preloader-mask preloader-mask-line">
+      <span class="preloader-line">Loading
+        <span class="preloader-words"><span class="preloader-words-track" data-preloader-target="words"><% words.each do |word| %><em><%= word %></em><% end %></span></span>
+      </span>
+    </span>
+    <span class="preloader-mask preloader-mask-count">
+      <span class="preloader-count" data-preloader-target="count" data-value="0"><% %w[hundreds tens ones].each do |place| %><span class="preloader-digit<%= ' is-blank' unless place == 'ones' %>"><span class="preloader-digit-strip"><% 10.times do |digit| %><span><%= digit %></span><% end %></span></span><% end %><sup>%</sup></span>
+    </span>
+  </div>
+  <span class="preloader-bar" data-preloader-target="bar"></span>
+</div>

@@ -3,25 +3,31 @@
   <div class="hero-glow" aria-hidden="true"></div>
   <p class="hero-meta hero-meta-left"><%= icon('code') %><%= @profile.title %></p>
   <p class="hero-meta hero-meta-right"><%= icon('pin') %><%= @profile.location %></p>
-  <h1 class="hero-name" id="hero-name"><span><%= @profile.short_name.upcase %></span> <span><%= @profile.name.split.last.upcase %></span></h1>
+  <%# Layered lockup: the solid first name sits behind the portrait and an outline copy sits in front, so the letters turn to outline where they cross the face. The outline surname starts in front and dissolves into its copy behind the portrait. %>
+  <h1 class="hero-name" id="hero-name" aria-label="<%= @profile.short_name %> <%= @profile.name.split.last %>" data-controller="hero-name">
+    <span class="hero-name-line hero-name-first" aria-hidden="true" data-hero-name-target="line" data-group="first"><%= @profile.short_name %></span>
+    <span class="hero-name-line hero-name-first hero-name-outline hero-name-front" aria-hidden="true" data-hero-name-target="line" data-group="first"><%= @profile.short_name %></span>
+    <span class="hero-name-line hero-name-last hero-name-outline" aria-hidden="true" data-hero-name-target="line" data-group="last"><%= @profile.name.split.last %></span>
+    <span class="hero-name-line hero-name-last hero-name-outline hero-name-front" aria-hidden="true" data-hero-name-target="line" data-group="last" data-dissolve><%= @profile.name.split.last %></span>
+  </h1>
   <% if @profile.portrait.attached? %>
-    <%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name, class: 'hero-portrait', fetchpriority: 'high' %>
+    <%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name, class: 'hero-portrait', fetchpriority: 'high', decoding: 'async', width: 900, height: 1601 %>
   <% end %>
   <p class="hero-intro"><%= @profile.introduction %></p>
   <div class="hero-cta">
     <%= link_to projects_path, class: 'button button-glow' do %>View my work<% end %>
     <%= link_to 'About me', about_path, class: 'text-link' %>
   </div>
-  <div class="marquee" aria-hidden="true">
-    <ul class="marquee-track"><% 2.times do %><% @technologies.each do |technology| %><li><%= tech_icon(technology) %><%= technology %></li><% end %><% end %></ul>
+  <div class="marquee" aria-hidden="true" data-controller="marquee">
+    <ul class="marquee-track"><% 2.times do |pass| %><% @technologies.each do |technology| %><li<%= ' class="marquee-dup"'.html_safe if pass == 1 %>><%= tech_icon(technology) %><%= technology %></li><% end %><% end %></ul>
   </div>
 </section>
 
-<div class="paper">
+<div class="paper" data-controller="reveal">
   <section class="intro-band" aria-labelledby="about-heading">
     <div class="intro-copy">
       <p class="eyebrow">ABOUT</p>
-      <h2 id="about-heading"><%= @profile.title %></h2>
+      <h2 data-reveal-target="item" data-reveal-variant="text" id="about-heading"><%= @profile.title %></h2>
       <p><%= @profile.about.to_s.split(/\n{2,}/).first %></p>
       <%= link_to about_path, class: 'text-link' do %>More about me <%= icon('arrow') %><% end %>
     </div>
@@ -36,22 +42,22 @@
     <div class="section-heading">
       <div>
         <p class="eyebrow">PROJECTS</p>
-        <h2 id="selected-heading">Selected work</h2>
+        <h2 data-reveal-target="item" data-reveal-variant="text" id="selected-heading">Selected <em>work</em></h2>
       </div>
       <%= link_to projects_path, class: 'text-link' do %>All projects <%= icon('arrow') %><% end %>
     </div>
     <% if @featured %><%= render 'shared/project_card', project: @featured, featured: true %><% else %>
       <div class="empty-state">No published projects.</div>
     <% end %>
-    <div class="mini-project-grid"><% @recent.each do |project| %><%= render 'shared/project_card', project: project, featured: false %><% end %></div>
+    <div class="mini-project-grid" data-controller="reveal"><% @recent.each do |project| %><%= render 'shared/project_card', project: project, featured: false %><% end %></div>
   </section>
 
   <section class="overview-columns" aria-label="Experience and focus">
     <div class="timeline-preview">
       <p class="eyebrow">EXPERIENCE</p>
-      <h2>Where I’ve worked</h2>
+      <h2 data-reveal-target="item" data-reveal-variant="text">Where I’ve <em>worked</em></h2>
       <% @experiences.each do |experience| %>
-        <div class="mini-experience"><small><%= icon('calendar') %><%= experience.period %></small>
+        <div class="mini-experience" data-reveal-target="item" data-reveal-variant="text"><small><%= icon('calendar') %><%= experience.period %></small>
           <h3><%= experience.role %></h3>
           <p><%= icon('building') %><%= experience.organization %></p>
         </div>
@@ -60,7 +66,7 @@
     </div>
     <div class="focus-preview">
       <p class="eyebrow">CURRENT FOCUS</p>
-      <h2>What I’m working on</h2>
+      <h2 data-reveal-target="item" data-reveal-variant="text">What I’m <em>working on</em></h2>
       <p><%= @profile.focus.to_s.lines.reject(&:blank?).first %></p>
       <%= link_to contact_path, class: 'button button-dark' do %>Let’s talk <%= icon('arrow') %><% end %>
     </div>

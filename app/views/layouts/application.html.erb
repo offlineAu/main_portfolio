@@ -13,14 +13,31 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;550;600;650;700&display=swap" rel="stylesheet">
+    <%= tag.link rel: 'preload', href: asset_path('inter-tight-variable.woff2'), as: 'font', type: 'font/woff2', crossorigin: 'anonymous' %>
+    <%= tag.link rel: 'preload', href: asset_path('instrument-serif-400.woff2'), as: 'font', type: 'font/woff2', crossorigin: 'anonymous' %>
+    <%= tag.link rel: 'preload', href: asset_path('instrument-serif-400-italic.woff2'), as: 'font', type: 'font/woff2', crossorigin: 'anonymous' %>
+    <%# Before first paint: opt into the preloader once per tab session. Without JS it never shows; the timeout is a failsafe. %>
+    <%= javascript_tag nonce: true do %>
+      (function () {
+        var root = document.documentElement;
+        try {
+          if (sessionStorage.getItem("preloaded") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        } catch (error) { return; }
+        root.classList.add("is-preloading");
+        setTimeout(function () { root.classList.remove("is-preloading"); }, 9000);
+      })();
+    <% end %>
     <%= stylesheet_link_tag 'base', 'site', 'data-turbo-track': 'reload' %>
     <%= javascript_importmap_tags %>
   </head>
   <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation verse">
     <a class="skip-link" href="#main-content">Skip to content</a>
+    <%= render 'shared/preloader', profile: @profile %>
+    <div id="navigation-loader" class="navigation-loader" data-turbo-permanent aria-live="polite" aria-atomic="true">
+      <span class="navigation-loader-mark" aria-hidden="true">Au</span>
+      <span class="navigation-loader-copy"></span>
+      <span class="navigation-loader-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    </div>
     <button class="nav-overlay" tabindex="-1" aria-label="Close navigation" data-navigation-target="overlay" data-action="navigation#close" hidden></button>
     <aside class="sidebar" id="site-navigation" data-navigation-target="drawer" aria-label="Main navigation">
       <%= link_to root_path, class: 'brand', aria: { label: "#{@profile.short_name} home" } do %>
