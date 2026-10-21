@@ -24,7 +24,20 @@
           if (sessionStorage.getItem("preloaded") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         } catch (error) { return; }
         root.classList.add("is-preloading");
-        setTimeout(function () { root.classList.remove("is-preloading"); }, 9000);
+        root.dataset.preloaderStarted = performance.now();
+        var timer = setTimeout(function () {
+          document.dispatchEvent(new CustomEvent("preloader:timeout"));
+          // The controller may never arrive. Finish the same lifecycle without it.
+          if (!root.classList.contains("is-preloading")) return;
+          root.classList.remove("is-preloading");
+          delete root.dataset.preloaderStarted;
+          try { sessionStorage.setItem("preloaded", "1"); } catch (error) {}
+          document.dispatchEvent(new CustomEvent("preloader:reveal"));
+          var loader = document.querySelector(".preloader");
+          if (loader) loader.remove();
+          document.dispatchEvent(new CustomEvent("preloader:complete"));
+        }, 9000);
+        document.addEventListener("preloader:complete", function () { clearTimeout(timer); }, { once: true });
       })();
     <% end %>
     <%= stylesheet_link_tag 'base', 'site', 'data-turbo-track': 'reload' %>

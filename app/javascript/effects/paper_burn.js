@@ -114,23 +114,29 @@ function compile(gl, type, source) {
 }
 
 function createRenderer(canvas) {
-  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false });
+  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false, depth: false, failIfMajorPerformanceCaveat: true });
   if (!gl) return null;
-  const program = gl.createProgram();
-  gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX));
-  gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENT));
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
-  gl.useProgram(program);
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const position = gl.getAttribLocation(program, "aPosition");
-  gl.enableVertexAttribArray(position);
-  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  const uniform = (name) => gl.getUniformLocation(program, name);
-  return { gl, uniforms: { resolution: uniform("uResolution"), time: uniform("uTime"), burn: uniform("uBurn"), speed: uniform("uSpeed"), ignite: uniform("uIgnite") } };
+  try {
+    const program = gl.createProgram();
+    gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX));
+    gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENT));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+    gl.useProgram(program);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const position = gl.getAttribLocation(program, "aPosition");
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    const uniform = (name) => gl.getUniformLocation(program, name);
+    return { gl, program, buffer, uniforms: { resolution: uniform("uResolution"), time: uniform("uTime"), burn: uniform("uBurn"), speed: uniform("uSpeed"), ignite: uniform("uIgnite") } };
+  } catch (error) {
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    throw error;
+  }
 }
 
 function uploadPaper(gl, source) {
@@ -142,6 +148,7 @@ function uploadPaper(gl, source) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return texture;
 }
 
 const random = (min, max) => min + Math.random() * (max - min);
@@ -225,10 +232,11 @@ function createParticles(canvas, scale) {
 // The caller drives the burn: set(value) while loading (0–1, eased toward so jumps stay smooth), then
 // finish(ms) burns off whatever is left and resolves once the last embers have mostly drifted away.
 // onFrame(radius) reports how far (CSS px) the first flame has spread from the origin, ignoring the noise.
-export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgnite, onReveal, onFrame }) {
-  const scale = Math.min(devicePixelRatio || 1, 1.5);
-  const width = Math.round(innerWidth * scale);
-  const height = Math.round(innerHeight * scale);
+export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgnite, onReveal, onFrame, onFallback }) {
+  // Keep shader work bounded even on large Windows displays with scaling enabled.
+  const scale = Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(1_000_000 / (innerWidth * innerHeight)));
+  const width = Math.max(1, Math.floor(innerWidth * scale));
+  const height = Math.max(1, Math.floor(innerHeight * scale));
   const make = (className) => Object.assign(document.createElement("canvas"), { className, width, height });
   const surface = make("paper-burn");
   let renderer;
@@ -237,8 +245,9 @@ export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgni
     if (!renderer) return null;
     const paper = make("");
     paint(paper.getContext("2d"), width, height, scale);
-    uploadPaper(renderer.gl, paper);
+    renderer.texture = uploadPaper(renderer.gl, paper);
   } catch {
+    renderer?.gl.getExtension("WEBGL_lose_context")?.loseContext();
     return null;
   }
   const sparksCanvas = make("paper-burn paper-burn-sparks");
@@ -270,10 +279,40 @@ export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgni
   let ending = null; // { from, at, ms, resolve }
   let revealed = false;
   let stopped = false;
+  let frameId;
+  let slowFrames = 0;
+
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    cancelAnimationFrame(frameId);
+    surface.removeEventListener("webglcontextlost", fallback);
+    ending?.resolve(false);
+    if (!gl.isContextLost()) {
+      gl.deleteTexture(renderer.texture);
+      gl.deleteBuffer(renderer.buffer);
+      gl.getAttachedShaders(renderer.program)?.forEach((shader) => gl.deleteShader(shader));
+      gl.deleteProgram(renderer.program);
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+    }
+    surface.remove();
+    sparksCanvas.remove();
+  };
+  const fallback = () => {
+    stop();
+    onFallback?.();
+  };
+  surface.addEventListener("webglcontextlost", fallback);
 
   const frame = (now) => {
     if (stopped) return;
+    if (gl.isContextLost()) return fallback();
     const elapsed = (now - started) / 1000;
+    // Repeated frames below 20 FPS make the wipe a better experience. Allow startup to settle.
+    if (now - started > 400) {
+      slowFrames = now - last > 50 ? slowFrames + 1 : 0;
+      if (slowFrames >= 4) return fallback();
+    }
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     if (ending) {
@@ -297,17 +336,19 @@ export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgni
     const alive = particles.draw(dt, elapsed);
     // Let the last embers drift briefly, but never hold the page past a short tail.
     if (ending && burn >= 1 && (alive === 0 || now - ending.at > ending.ms + 500)) {
-      stopped = true;
-      return ending.resolve(true);
+      const resolve = ending.resolve;
+      ending = null;
+      stop();
+      return resolve(true);
     }
-    requestAnimationFrame(frame);
+    frameId = requestAnimationFrame(frame);
   };
   // Draw the untouched sheet once before the DOM paper is hidden, so the handover is invisible.
   gl.uniform1f(uniforms.time, 0);
   gl.uniform1f(uniforms.burn, 0);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   onIgnite?.();
-  requestAnimationFrame(frame);
+  frameId = requestAnimationFrame(frame);
 
   return {
     // Spread per unit of burn, in viewport heights: lets the caller turn a distance into a burn value.
@@ -321,9 +362,6 @@ export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgni
         ending = { from: burn, at: performance.now(), ms, resolve };
       });
     },
-    stop() {
-      stopped = true;
-      ending?.resolve(false);
-    },
+    stop,
   };
 }
