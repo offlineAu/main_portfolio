@@ -1,0 +1,14 @@
+<% content_for :title, 'Activity' %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">SECURITY</p>
+    <h1>Activity</h1>
+    <p class="page-subtitle">Sign-ins and content changes, newest first.</p>
+  </div></div>
+<section class="panel content-list"><% @events.each do |event| %>
+    <div class="content-row">
+      <div><strong><%= audit_description(event) %></strong><small><%= l event.created_at, format: :short %> · <%= event.ip_address %><%= " · #{event.user_agent.truncate(70)}" if event.user_agent.present? %></small></div>
+    </div>
+  <% end %><% if @events.empty? %>
+    <p class="muted">No activity recorded yet.</p>
+  <% end %></section>

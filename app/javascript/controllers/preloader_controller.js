@@ -19,16 +19,24 @@ export default class extends Controller {
 
   connect() {
     this.root = document.documentElement;
-    if (!this.root.classList.contains("is-preloading")) return this.element.remove();
+    if (!this.root.classList.contains("is-preloading")) {
+      this.done = true;
+      return this.element.remove();
+    }
     this.preference = matchMedia("(prefers-reduced-motion: reduce)");
     this.finish = () => this.complete();
     this.preference.addEventListener("change", this.finish);
     document.addEventListener("turbo:before-cache", this.finish);
     this.digits = [...this.countTarget.querySelectorAll(".preloader-digit")];
     this.wordCount = this.wordsTarget.children.length;
-    this.started = performance.now();
+    this.started = Number(this.root.dataset.preloaderStarted) || performance.now();
+    this.lastTick = performance.now();
     this.shown = 0;
     this.goal = 8;
+    document.addEventListener("preloader:timeout", this.finish);
+    const remaining = MAX_MS - (performance.now() - this.started);
+    if (remaining <= 0) return this.complete();
+    this.deadlineTimer = setTimeout(() => this.leave(), remaining);
     this.track();
     this.frame = requestAnimationFrame(() => this.tick());
   }
@@ -49,9 +57,14 @@ export default class extends Controller {
   }
 
   tick() {
-    const elapsed = performance.now() - this.started;
+    if (this.done || this.leaving) return;
+    const now = performance.now();
+    const elapsed = now - this.started;
+    const delta = now - this.lastTick;
+    this.lastTick = now;
     const goal = elapsed >= MAX_MS ? 100 : Math.min(this.goal, (100 * elapsed) / MIN_MS);
-    this.shown += (goal - this.shown) * 0.12;
+    this.shown += (goal - this.shown) * (1 - Math.exp(-delta / 130));
+    if (elapsed >= MAX_MS) this.shown = 100;
     if (goal - this.shown < 0.4) this.shown = goal;
     this.render(Math.round(this.shown));
     if (this.shown >= 100) return this.leave();
@@ -70,7 +83,7 @@ export default class extends Controller {
     const progress = value / 100;
     this.barTarget.style.setProperty("--progress", progress);
     this.wordsTarget.style.setProperty("--word", Math.min(this.wordCount - 1, Math.floor(progress * this.wordCount)));
-    if (value >= IGNITE_AT && this.burner === undefined) this.ignite();
+    if (value >= IGNITE_AT && !this.leaving && this.burner === undefined) this.ignite();
     // Ease out over the loading stretch, so the flame catches gently and keeps spreading.
     const t = Math.max(0, (value - IGNITE_AT) / (100 - IGNITE_AT));
     this.burner?.set(this.loadingBurn * (1 - (1 - t) * (1 - t)));
@@ -102,6 +115,7 @@ export default class extends Controller {
         onIgnite: () => this.element.classList.add("is-burning"),
         onReveal: () => this.reveal(),
         onFrame: (radius) => this.scorch(radius),
+        onFallback: () => this.fallback(),
       });
     } catch {
       this.burner = null;
@@ -124,12 +138,27 @@ export default class extends Controller {
     });
   }
 
+  fallback() {
+    this.burner = null;
+    if (this.done) return;
+    if (this.revealed) return this.complete();
+    this.element.classList.remove("is-burning");
+    this.masks?.forEach(({ mask }) => mask.classList.remove("is-burnt"));
+    if (this.leaving) this.wipe();
+  }
+
   async leave() {
+    if (this.done || this.leaving) return;
+    this.leaving = true;
+    clearTimeout(this.deadlineTimer);
+    cancelAnimationFrame(this.frame);
+    this.shown = 100;
+    this.render(100);
     this.timer = setTimeout(this.finish, EXIT_MS);
     this.element.classList.add("is-leaving");
     if (!this.burner) return this.wipe();
-    await this.burner.finish(FINISH_MS);
-    this.complete();
+    const finished = await this.burner.finish(FINISH_MS);
+    if (finished) this.complete();
   }
 
   wipe() {
@@ -159,10 +188,13 @@ export default class extends Controller {
     this.done = true;
     cancelAnimationFrame(this.frame);
     this.burner?.stop();
+    clearTimeout(this.deadlineTimer);
     clearTimeout(this.timer);
     clearTimeout(this.revealTimer);
     this.reveal();
     this.root.classList.remove("is-preloading");
+    delete this.root.dataset.preloaderStarted;
+    document.dispatchEvent(new CustomEvent("preloader:complete"));
     try {
       sessionStorage.setItem("preloaded", "1");
     } catch {}
@@ -173,5 +205,6 @@ export default class extends Controller {
     this.complete();
     this.preference?.removeEventListener("change", this.finish);
     document.removeEventListener("turbo:before-cache", this.finish);
+    document.removeEventListener("preloader:timeout", this.finish);
   }
 }

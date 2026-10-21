@@ -1,0 +1,18 @@
+<% content_for :title, 'Set up two-factor' %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">SECURITY</p>
+    <h1>Set up two-factor authentication</h1>
+    <p class="page-subtitle">Signing in will need your password and a code from your phone.</p>
+  </div></div>
+<section class="panel two-factor-setup">
+  <ol class="setup-steps">
+    <li>Open an authenticator app (1Password, Google Authenticator, Authy, or your phone's password manager).</li>
+    <li>Scan this QR code, or enter the setup key by hand.</li>
+    <li>Type the 6-digit code the app shows.</li>
+  </ol>
+  <div class="qr-frame"><%= @qr_svg.html_safe %></div>
+  <p class="muted">Setup key: <code class="setup-key"><%= @secret.scan(/.{4}/).join(' ') %></code></p>
+  <%= form_with url: admin_two_factor_path, class: 'editor-form' do |form| %>
+    <div class="field"><%= form.label :code, '6-digit code' %><%= form.text_field :code, required: true, autocomplete: 'one-time-code', inputmode: 'numeric', pattern: '[0-9]{6}', maxlength: 6, autofocus: true %></div>
+    <%= form.submit 'Turn on two-factor', class: 'button button-dark' %><% end %></section>

@@ -3,6 +3,8 @@ abort "Browser setup is restricted to its isolated development database." unless
 owner = User.first || User.new
 owner.update!(email_address: "browser-test@example.com", password: "browser-test-only-password")
 owner.sessions.destroy_all
+# Fixed, test-only authenticator secret shared with test/browser/owner.js.
+owner.enable_two_factor!("JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP")
 
 # Ensure the story pilot has its real screenshot even in older browser databases.
 veloce = Project.find_by!(slug: 'veloce')

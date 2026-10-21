@@ -92,6 +92,12 @@ img {
   display: block;
   max-width: 100%;
 }
+/* Portfolio imagery: no iOS long-press save sheet and no drag-out. Text stays selectable. */
+.protected-media {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
 h1,
 h2,
 h3,
@@ -437,6 +443,32 @@ small {
   -webkit-mask: var(--logo) center / contain no-repeat;
   mask: var(--logo) center / contain no-repeat;
 }
+/* One class per logo: the CSP forbids style attributes, so the mask URL cannot be inline. */
+.tech-logo-css { --logo: url("tech/css.svg"); }
+.tech-logo-dart { --logo: url("tech/dart.svg"); }
+.tech-logo-expo { --logo: url("tech/expo.svg"); }
+.tech-logo-fastapi { --logo: url("tech/fastapi.svg"); }
+.tech-logo-firebase { --logo: url("tech/firebase.svg"); }
+.tech-logo-flutter { --logo: url("tech/flutter.svg"); }
+.tech-logo-git { --logo: url("tech/git.svg"); }
+.tech-logo-github { --logo: url("tech/github.svg"); }
+.tech-logo-googleappsscript { --logo: url("tech/googleappsscript.svg"); }
+.tech-logo-googlebigquery { --logo: url("tech/googlebigquery.svg"); }
+.tech-logo-googlecloud { --logo: url("tech/googlecloud.svg"); }
+.tech-logo-html5 { --logo: url("tech/html5.svg"); }
+.tech-logo-huggingface { --logo: url("tech/huggingface.svg"); }
+.tech-logo-inertia { --logo: url("tech/inertia.svg"); }
+.tech-logo-javascript { --logo: url("tech/javascript.svg"); }
+.tech-logo-laravel { --logo: url("tech/laravel.svg"); }
+.tech-logo-mysql { --logo: url("tech/mysql.svg"); }
+.tech-logo-nextdotjs { --logo: url("tech/nextdotjs.svg"); }
+.tech-logo-php { --logo: url("tech/php.svg"); }
+.tech-logo-postgresql { --logo: url("tech/postgresql.svg"); }
+.tech-logo-prisma { --logo: url("tech/prisma.svg"); }
+.tech-logo-python { --logo: url("tech/python.svg"); }
+.tech-logo-react { --logo: url("tech/react.svg"); }
+.tech-logo-tailwindcss { --logo: url("tech/tailwindcss.svg"); }
+.tech-logo-typescript { --logo: url("tech/typescript.svg"); }
 .tech-icon-generic {
   display: inline-grid;
   place-items: center;

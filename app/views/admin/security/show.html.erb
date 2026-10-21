@@ -1,0 +1,25 @@
+<% content_for :title, 'Security' %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">SECURITY</p>
+    <h1>Security</h1>
+    <p class="page-subtitle">Two-factor authentication and where you're signed in.</p>
+  </div></div>
+<section class="panel">
+  <h2>Two-factor authentication</h2>
+  <p>On since <%= l Current.user.otp_enabled_at, format: :long %>. <%= pluralize Current.user.otp_recovery_digests.size, 'recovery code' %> left.</p>
+  <%= form_with url: admin_security_recovery_codes_path, class: 'editor-form' do |form| %>
+    <div class="field"><%= form.label :code, 'Current authenticator code' %><%= form.text_field :code, required: true, autocomplete: 'one-time-code', inputmode: 'numeric', pattern: '[0-9]{6}', maxlength: 6 %></div>
+    <%= form.submit 'Make new recovery codes', class: 'button' %><% end %>
+  <p class="muted">Lost your phone and your recovery codes? Run <code>bin/rails owner:reset_two_factor</code> on the server.</p>
+</section>
+<section class="panel">
+  <h2>Signed-in sessions</h2>
+  <div class="content-list"><% @sessions.each do |session| %>
+      <div class="content-row">
+        <div><strong><%= session.user_agent.presence || 'Unknown browser' %></strong><small><%= session.ip_address %> · signed in <%= time_ago_in_words session.created_at %> ago · active <%= time_ago_in_words session.last_seen_at || session.created_at %> ago<%= ' · this browser' if session == Current.session %></small></div>
+        <% unless session == Current.session %><div class="row-actions"><%= button_to 'Sign out', admin_security_session_path(session), method: :delete, class: 'text-link danger' %></div><% end %>
+      </div>
+    <% end %></div>
+  <% if @sessions.size > 1 %><%= button_to 'Sign out everywhere else', admin_security_sessions_path, method: :delete, class: 'button', data: { turbo_confirm: 'Sign out of every other session?' } %><% end %>
+</section>

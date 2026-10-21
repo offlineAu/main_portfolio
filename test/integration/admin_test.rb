@@ -1,13 +1,10 @@
 require "test_helper"
 
 class AdminTest < ActionDispatch::IntegrationTest
-  setup do
-    @owner = User.create!(email_address: "owner@example.com", password: "a-test-password-123")
-  end
+  include OwnerSignIn
 
-  def sign_in
-    post session_path, params: { email_address: @owner.email_address, password: "a-test-password-123" }
-    assert_redirected_to admin_root_path
+  setup do
+    @owner = create_owner
   end
 
   test "all admin mutations and previews require authentication" do

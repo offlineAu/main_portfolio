@@ -11,7 +11,7 @@
     <%= simple_format @profile.about %>
     <div class="location"><%= icon('pin') %><%= @profile.location %></div>
   </section>
-  <div class="about-portrait"><% if @profile.portrait.attached? %><%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name %><% end %></div>
+  <div class="about-portrait"><% if @profile.portrait.attached? %><%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name, class: 'protected-media', draggable: false %><% end %></div>
 </div>
 <section class="skills-section">
   <div class="section-heading">

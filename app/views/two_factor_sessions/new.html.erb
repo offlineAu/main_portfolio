@@ -1,0 +1,9 @@
+<% content_for :title, 'Two-factor check' %>
+<section class="login-card panel">
+  <p class="eyebrow">CONTENT STUDIO</p>
+  <h1>Two-factor check</h1>
+  <p class="muted">Enter the 6-digit code from your authenticator app, or one of your recovery codes.</p>
+  <%= form_with url: session_two_factor_path, class: 'editor-form' do |form| %>
+    <div class="field"><%= form.label :code, 'Code' %><%= form.text_field :code, required: true, autocomplete: 'one-time-code', inputmode: 'text', autofocus: true, maxlength: 11, spellcheck: false, autocapitalize: 'off' %></div>
+    <%= form.submit 'Verify', class: 'button button-dark' %><% end %>
+  <p class="muted"><%= link_to 'Start over', new_session_path, class: 'text-link' %></p></section>

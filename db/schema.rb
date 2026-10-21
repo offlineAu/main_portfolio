@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_160000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "audit_events", force: :cascade do |t|
+    t.bigint "user_id"
+    t.string "action", null: false
+    t.string "subject_type"
+    t.string "subject_id"
+    t.string "subject_label"
+    t.string "ip_address"
+    t.string "user_agent"
+    t.jsonb "details", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.index ["created_at"], name: "index_audit_events_on_created_at"
+    t.index ["user_id"], name: "index_audit_events_on_user_id"
   end
 
   create_table "experiences", force: :cascade do |t|
@@ -73,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_160000) do
     t.string "phone"
     t.string "website_url"
     t.text "education"
+    t.boolean "watermark_portrait", default: false, null: false
   end
 
   create_table "projects", force: :cascade do |t|
@@ -100,6 +115,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_160000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "watermark", default: true, null: false
     t.index ["published", "position"], name: "index_projects_on_published_and_position"
     t.index ["slug"], name: "index_projects_on_slug", unique: true
   end
@@ -110,6 +126,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_160000) do
     t.string "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "last_seen_at"
+    t.index ["last_seen_at"], name: "index_sessions_on_last_seen_at"
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
@@ -122,15 +140,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_160000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "solid_cache_entries", force: :cascade do |t|
+    t.binary "key", null: false
+    t.binary "value", null: false
+    t.datetime "created_at", null: false
+    t.bigint "key_hash", null: false
+    t.integer "byte_size", null: false
+    t.index ["byte_size"], name: "index_solid_cache_entries_on_byte_size"
+    t.index ["key_hash", "byte_size"], name: "index_solid_cache_entries_on_key_hash_and_byte_size"
+    t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "otp_secret"
+    t.datetime "otp_enabled_at"
+    t.bigint "otp_last_used_step"
+    t.jsonb "otp_recovery_digests", default: [], null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "audit_events", "users", on_delete: :nullify
   add_foreign_key "sessions", "users"
 end

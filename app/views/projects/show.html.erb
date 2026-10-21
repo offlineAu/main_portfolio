@@ -62,9 +62,9 @@
     </div>
     <% @project.ordered_gallery.each do |attachment| %>
       <% metadata = attachment.blob.metadata %>
-      <% ratio = metadata['width'].to_i > 0 && metadata['height'].to_i > 0 ? "#{metadata['width'].to_i} / #{metadata['height'].to_i}" : '16 / 10' %>
-      <figure class="gallery-image" data-controller="image-load" style="aspect-ratio: <%= ratio %>">
-        <%= image_tag media_path_for(attachment), alt: @project.gallery_alt_for(attachment), loading: 'lazy', data: { image_load_target: 'image' } %>
+      <% width, height = metadata['width'].to_i > 0 && metadata['height'].to_i > 0 ? [metadata['width'].to_i, metadata['height'].to_i] : [1600, 1000] %>
+      <figure class="gallery-image" data-controller="image-load" data-image-load-ratio-value="<%= width %> / <%= height %>">
+        <%= image_tag media_path_for(attachment), alt: @project.gallery_alt_for(attachment), width: width, height: height, loading: 'lazy', draggable: false, class: 'protected-media', data: { image_load_target: 'image' } %>
         <span class="image-fallback" data-image-load-target="fallback" hidden>Image unavailable</span>
       </figure>
     <% end %></section>
@@ -74,4 +74,4 @@
     <p class="eyebrow">CONTACT</p>
     <h2>Discuss a project</h2>
   </div>
-  <%= mail_to @profile.email, class: 'button button-dark' do %>Get in touch <%= icon('arrow') %><% end %></section>
+  <%= protected_contact_link @profile.email, class: 'button button-dark' do %>Get in touch <%= icon('arrow') %><% end %></section>
