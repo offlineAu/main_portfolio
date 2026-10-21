@@ -12,7 +12,7 @@ gem "solid_cache", "~> 1.0"
 gem "rotp", "~> 6.3"
 gem "rqrcode", "~> 3.2"
 gem "bootsnap", require: false
-gem "image_processing", "~> 1.14"
+gem "image_processing", "~> 2.2"
 gem "aws-sdk-s3", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]
 
