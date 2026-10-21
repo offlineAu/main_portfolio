@@ -58,7 +58,7 @@ module ApplicationHelper
     slug = TECH_ICONS[name.to_s.downcase.strip]
     return content_tag(:span, icon("code"), class: "tech-icon tech-icon-generic", "aria-hidden": true) unless slug
 
-    content_tag(:span, "", class: "tech-icon", style: "--logo: url(#{asset_path("tech/#{slug}.svg")})", "aria-hidden": true)
+    content_tag(:span, "", class: "tech-icon tech-logo-#{slug}", "aria-hidden": true)
   end
 
   # Logos for every recognised technology in a label like "React / TypeScript"; otherwise a themed glyph.
@@ -95,9 +95,28 @@ module ApplicationHelper
     [
       (profile.github_url.present? && { key: "github", label: "GitHub", handle: "@#{handle.(profile.github_url)}", url: profile.github_url, icon: "github", external: true }),
       (profile.linkedin_url.present? && { key: "linkedin", label: "LinkedIn", handle: handle.(profile.linkedin_url), url: profile.linkedin_url, icon: "linkedin", external: true }),
-      (profile.email.present? && { key: "mail", label: "Email", handle: profile.email, url: "mailto:#{profile.email}", icon: "mail", external: false }),
+      (profile.email.present? && { key: "mail", label: "Email", handle: masked_contact(profile.email), url: contact_path, icon: "mail", external: false, protected_email: profile.email }),
       (profile.website_url.present? && { key: "web", label: "Website", handle: URI.parse(profile.website_url).host, url: profile.website_url, icon: "globe", external: true }),
     ].select(&:itself)
+  end
+
+  # A link whose mailto:/tel: target is filled in by the contact controller; it points at the contact page until then.
+  def protected_contact_link(value, scheme: "mailto", **options, &block)
+    data = (options.delete(:data) || {}).merge(controller: "contact", contact_value_value: encoded_contact(value), contact_scheme_value: scheme)
+    link_to contact_path, **options, data: data, &block
+  end
+
+  # Text inside a protected contact link: masked in the HTML, replaced with the real value by the controller.
+  def protected_contact_text(value, tag: :span)
+    content_tag(tag, masked_contact(value), data: { contact_target: "text" })
+  end
+
+  def encoded_contact(value)
+    Base64.strict_encode64(value.to_s.reverse)
+  end
+
+  def masked_contact(value)
+    value.include?("@") ? value.sub("@", " [at] ") : value.gsub(/\d(?=(?:\D*\d){4})/, "•")
   end
 
   def page_title
@@ -109,8 +128,11 @@ module ApplicationHelper
     link_to safe_join([icon(glyph), content_tag(:span, label)].compact), path, class: "nav-item #{'active' if active}", aria: { current: active ? "page" : nil }
   end
 
+  # The version busts immutable browser caches when the watermark setting or pipeline changes.
   def media_path_for(attachment)
-    portfolio_media_path(MediaToken.sign(attachment))
+    record = attachment.record
+    watermark = record.is_a?(Profile) ? record.watermark_portrait? : record.try(:watermark?)
+    portfolio_media_path(MediaToken.sign(attachment), v: "2#{watermark ? 'w' : ''}")
   end
 
   def project_color(project)

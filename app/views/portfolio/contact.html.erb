@@ -7,14 +7,14 @@
 <section class="contact-hero"><span class="pill pill-glass"><%= icon('briefcase') %><%= @profile.availability %></span>
   <h2>Get in touch</h2>
   <p>Based in <%= @profile.location %>. Contact me about a project or a development role.</p>
-  <%= mail_to @profile.email, class: 'button button-dark' do %><%= icon('mail') %>Email me<% end %>
+  <%= protected_contact_link @profile.email, class: 'button button-dark' do %><%= icon('mail') %>Email me<% end %>
   <%= link_to '/airl-joriz-janoplo-resume.pdf', class: 'button button-dark', download: true do %><%= icon('download') %>Download resume<% end %></section>
-<div class="contact-links-grid"><%= mail_to @profile.email, class: 'panel contact-link' do %><%= icon('mail') %><span><small>EMAIL ME</small><strong><%= @profile.email %></strong></span><%= icon('external') %><% end %><% [['GitHub', @profile.github_url, 'github'], ['LinkedIn', @profile.linkedin_url, 'linkedin']].each do |label, url, glyph| %><% if url.present? %><%= link_to url, class: 'panel contact-link', target: '_blank', rel: 'noopener noreferrer' do %><%= icon(glyph) %><span><small>FIND ME ON</small><strong><%= label %></strong></span><%= icon('external') %><% end %><% end %><% end %></div>
+<div class="contact-links-grid"><%= protected_contact_link @profile.email, class: 'panel contact-link' do %><%= icon('mail') %><span><small>EMAIL ME</small><%= protected_contact_text @profile.email, tag: :strong %></span><%= icon('external') %><% end %><% [['GitHub', @profile.github_url, 'github'], ['LinkedIn', @profile.linkedin_url, 'linkedin']].each do |label, url, glyph| %><% if url.present? %><%= link_to url, class: 'panel contact-link', target: '_blank', rel: 'noopener noreferrer' do %><%= icon(glyph) %><span><small>FIND ME ON</small><strong><%= label %></strong></span><%= icon('external') %><% end %><% end %><% end %></div>
 
 <div class="contact-links-grid">
   <% if @profile.phone.present? %>
-    <%= link_to "tel:#{@profile.phone.gsub(/[^+0-9]/, '')}", class: 'panel contact-link' do %>
-      <%= icon('phone') %><span><small>PHONE</small><strong><%= @profile.phone %></strong></span><%= icon('external') %>
+    <%= protected_contact_link @profile.phone, scheme: 'tel', class: 'panel contact-link' do %>
+      <%= icon('phone') %><span><small>PHONE</small><%= protected_contact_text @profile.phone, tag: :strong %></span><%= icon('external') %>
     <% end %>
   <% end %>
   <% if @profile.website_url.present? %>

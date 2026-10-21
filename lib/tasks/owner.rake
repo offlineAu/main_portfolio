@@ -18,4 +18,17 @@ namespace :owner do
     owner.sessions.destroy_all
     puts "Owner credentials saved. Existing sessions were revoked."
   end
+
+  desc "Turn off the owner's two-factor authentication and revoke every session (for a lost phone)"
+  task reset_two_factor: :environment do
+    owner = User.first or abort "No owner account exists."
+    owner.reset_two_factor!
+    owner.sessions.destroy_all
+    puts "Two-factor was reset and all sessions were revoked. Sign in and set it up again."
+  end
+
+  desc "Delete expired admin sessions"
+  task sweep_sessions: :environment do
+    puts "Removed #{Session.sweep} expired sessions."
+  end
 end

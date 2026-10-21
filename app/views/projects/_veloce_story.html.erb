@@ -4,7 +4,7 @@
     <div class="story-stage">
       <% steps.each_with_index do |step, index| %>
         <%= image_tag "veloce/#{step[:image]}.webp", alt: step[:alt], width: 1800, height: step[:ratio] == '4 / 3' ? 1350 : 1125,
-                      loading: index.zero? ? 'eager' : 'lazy', class: 'story-frame', data: { story_target: 'frame', frame: step[:image] } %>
+                      loading: index.zero? ? 'eager' : 'lazy', draggable: false, class: 'story-frame protected-media', data: { story_target: 'frame', frame: step[:image] } %>
       <% end %>
     </div>
     <nav class="story-chapters" aria-label="Case study chapters">
@@ -22,8 +22,8 @@
           <article class="story-step" data-story-target="chapter" data-frame="<%= step[:image] %>" data-act="<%= act[:id] %>">
             <h3><%= step[:heading] %></h3>
             <p><%= step[:body] %></p>
-            <figure class="story-inline" style="aspect-ratio: <%= step[:ratio] %>">
-              <%= image_tag "veloce/#{step[:image]}.webp", alt: step[:alt], width: 1800, height: step[:ratio] == '4 / 3' ? 1350 : 1125, loading: 'lazy' %>
+            <figure class="story-inline <%= step[:ratio] == '4 / 3' ? 'ratio-4-3' : 'ratio-16-10' %>">
+              <%= image_tag "veloce/#{step[:image]}.webp", alt: step[:alt], width: 1800, height: step[:ratio] == '4 / 3' ? 1350 : 1125, loading: 'lazy', draggable: false, class: 'protected-media' %>
             </figure>
           </article>
         <% end %>

@@ -20,6 +20,8 @@ bin/dev
 
 Open <http://localhost:3000>. Owner sign-in is at `/session/new`; the content studio is at `/admin`. The setup task securely prompts for the email and password; it can also replace forgotten credentials and revokes existing sessions. No default password or public registration exists.
 
+The first sign-in asks you to set up two-factor authentication: scan the QR code with an authenticator app, enter a code, and store the ten recovery codes it shows once. From then on, sign-in needs the password and a code. **Security** in the studio lists signed-in sessions (with sign-out buttons) and makes new recovery codes; **Activity** shows sign-ins and content changes. If the phone and recovery codes are both lost, run `bin/rails owner:reset_two_factor` on the server, then sign in and set it up again.
+
 If the macOS SDK reports an `arm64e.x1` linker error while installing gems, select an installed compatible SDK for that command, for example `SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk bundle install`.
 
 `.env.example` documents environment variables; Rails does not automatically load that file. PostgreSQL defaults to local `airl_portfolio_development` and `airl_portfolio_test` databases. Set `DATABASE_URL` or `TEST_DATABASE_URL` to override them separately.
@@ -33,6 +35,7 @@ If the macOS SDK reports an `arm64e.x1` linker error while installing gems, sele
 - Edit skills and experience, including display order.
 - Upload JPEG, PNG, or WebP images up to 10MB each. Gallery images initially display in upload order; each image has editable alternative text and position. Replacement covers and image removal are supported.
 - Private editorial notes hold verification questions and never appear publicly. Contact uses email and social links.
+- **Watermark images** (on by default for projects, off for the portrait) adds a small "au · portfolio" mark to images on the public site. Served images are capped at 1200px (portrait 900×1600) and stripped of EXIF/GPS metadata. Originals in storage are unchanged.
 
 The seed imports the supplied resume from `db/content/resume.json` and six curated projects. It never overwrites existing records. To explicitly apply this resume update to an existing database after migrating, run `bin/rails content:update_from_resume`. This updates the profile, replaces the superseded imported work history, adds resume skills, and corrects Sentisphere's role, dates, and contribution. Other projects, custom experience entries, and credentials are preserved. The supplied PDF is available from Contact as a resume download. Phone, website, and education remain editable in the profile studio.
 
@@ -70,7 +73,7 @@ npm run test:browser
 
 The browser suite uses a separate `airl_portfolio_browser` database and a test-only owner, checks six public pages at four viewport sizes with axe, and exercises the real publishing and upload flow. If Chrome is already installed, `PLAYWRIGHT_CHROME_CHANNEL=chrome npm run test:browser` uses it. Screenshots and failure traces are written under ignored `test-results/`.
 
-Tests use a separate database and cover public routes and filters, owner access, editing, draft previews, publication, image access/removal, validation, stable slugs, and repeatable seeding. Production boot can be checked locally using `ACTIVE_STORAGE_SERVICE=local`, a development-machine database URL, and a temporary `SECRET_KEY_BASE`; production normally uses the bucket configuration below.
+Tests use a separate database and cover public routes and filters, owner access, two-factor sign-in, rate limits, session expiry, the activity log, security headers, image metadata stripping and watermarks, editing, draft previews, publication, image access/removal, validation, stable slugs, and repeatable seeding. Production boot can be checked locally using `ACTIVE_STORAGE_SERVICE=local`, a development-machine database URL, and a temporary `SECRET_KEY_BASE`; production normally uses the bucket configuration below.
 
 ## Vercel deployment
 
@@ -87,7 +90,7 @@ logs, and development caches from the deployment upload.
    `S3_REGION`. Use separate database and storage resources for previews.
 4. In a trusted terminal with the production variables loaded, run
    `RAILS_ENV=production bin/rails db:prepare` and then
-   `RAILS_ENV=production bin/rails owner:setup`. Run database migrations separately
+   `RAILS_ENV=production bin/rails owner:setup`. Sign in right away and finish two-factor setup. Run database migrations separately
    for later releases too; Vercel does not execute `railway.json` pre-deploy hooks.
 5. Run `vercel deploy` for a preview. Verify `/up`, public pages, sign-in, and
    uploads before running `vercel deploy --prod`.
@@ -107,10 +110,12 @@ The repository includes a production Dockerfile and `railway.json`. Deployment h
 
 Logs go to stdout. Use Railway health checks and deployment logs to monitor boot and failures. Enable PostgreSQL backups and retain bucket data; the database contains attachment references. Roll back code with the previous Railway deployment, retaining the database and uploads. Migrations in this version are additive; never reset a production database to roll back presentation changes.
 
-The former Vercel static configuration has been removed. Its currently deployed site remains available until you change it. `/motion-lab.html` redirects to the preserved independent experiment at `/legacy/motion-lab.html`. The original portfolio source is retained in Git history.
+The former Vercel static configuration has been removed. Its currently deployed site remains available until you change it. The original portfolio source and the old motion-lab experiment are retained in Git history.
 
 ## Public interface
 
-`/` · `/projects?technology=Flutter` · `/projects/:slug` · `/about` · `/experience` · `/contact` · `/sitemap.xml` · `/robots.txt` · `/up`
+`/` · `/projects?technology=Flutter` · `/projects/:slug` · `/about` · `/experience` · `/contact` · `/sitemap.xml` · `/robots.txt` · `/.well-known/security.txt` · `/up`
+
+Security notes: see `docs/security-investigation.md`. Rate-limit counters live in PostgreSQL through Solid Cache, so they are shared by every instance. The two-factor secret is encrypted at rest. By default the keys are derived from `SECRET_KEY_BASE`, so rotating it means running `owner:reset_two_factor` afterwards; to avoid that, set `ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY`, `ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY`, and `ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT` (generate them with `bin/rails db:encryption:init`) before setting up two-factor. Content Security Policy violations are logged as `[CSP violation]` lines. `/.well-known/security.txt` points to the contact page.
 
 Project and profile images use controlled `/media/:signed_attachment_id` endpoints. Default Active Storage download routes are disabled so unpublishing a project also removes anonymous access to its images. Media is served through the app with private cache headers; unauthorized and unknown records return 404.

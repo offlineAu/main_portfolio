@@ -1,6 +1,6 @@
 <div class="project-art art-<%= project_color(project) %> <%= local_assigns[:large] ? 'art-large' : '' %>" <%= 'data-controller="image-load"'.html_safe if project.cover.attached? %>>
   <% if project.cover.attached? %>
-    <%= image_tag media_path_for(project.cover.attachment), alt: project.cover_alt.presence || "#{project.name} project cover", loading: 'lazy', data: { image_load_target: 'image' } %>
+    <%= image_tag media_path_for(project.cover.attachment), alt: project.cover_alt.presence || "#{project.name} project cover", loading: 'lazy', draggable: false, class: 'protected-media', data: { image_load_target: 'image' } %>
     <span class="image-fallback" data-image-load-target="fallback" hidden>Image unavailable</span>
   <% else %>
     <div class="art-top"><span><%= project.category %></span></div>

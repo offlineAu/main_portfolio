@@ -12,6 +12,13 @@ class MetadataController < ApplicationController
 
   def robots
     origin = ENV.fetch("APP_URL", request.base_url).chomp("/")
-    render plain: "User-agent: *\nDisallow: /admin\nDisallow: /session\nDisallow: /legacy\nDisallow: /media\nSitemap: #{origin}/sitemap.xml\n"
+    render plain: "User-agent: *\nDisallow: /admin\nDisallow: /session\nDisallow: /media\nDisallow: /airl-joriz-janoplo-resume.pdf\nSitemap: #{origin}/sitemap.xml\n"
+  end
+
+  # RFC 9116. Points at the contact page rather than printing the address for harvesters.
+  def security
+    origin = ENV.fetch("APP_URL", request.base_url).chomp("/")
+    expires = 180.days.from_now.utc.beginning_of_day.iso8601
+    render plain: "Contact: #{origin}#{contact_path}\nExpires: #{expires}\nPreferred-Languages: en\nCanonical: #{origin}/.well-known/security.txt\n"
   end
 end

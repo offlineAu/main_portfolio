@@ -56,9 +56,11 @@ class PortfolioTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "&lt;script&gt;"
   end
 
-  test "legacy experiment and metadata are reachable" do
+  test "metadata is reachable and the legacy experiment is gone" do
     get "/motion-lab.html"
-    assert_redirected_to "/legacy/motion-lab.html"
+    assert_response :not_found
+    get "/legacy/motion-lab.html"
+    assert_response :not_found
     get "/robots.txt"
     assert_response :success
     assert_includes response.body, "Disallow: /admin"

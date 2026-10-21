@@ -11,7 +11,7 @@
     <span class="hero-name-line hero-name-last hero-name-outline hero-name-front" aria-hidden="true" data-hero-name-target="line" data-group="last" data-dissolve><%= @profile.name.split.last %></span>
   </h1>
   <% if @profile.portrait.attached? %>
-    <%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name, class: 'hero-portrait', fetchpriority: 'high', decoding: 'async', width: 900, height: 1601 %>
+    <%= image_tag media_path_for(@profile.portrait.attachment), alt: @profile.portrait_alt.presence || @profile.name, class: 'hero-portrait protected-media', draggable: false, fetchpriority: 'high', decoding: 'async', width: 900, height: 1601 %>
   <% end %>
   <p class="hero-intro"><%= @profile.introduction %></p>
   <div class="hero-cta">

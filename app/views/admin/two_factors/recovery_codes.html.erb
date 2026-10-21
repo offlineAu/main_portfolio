@@ -1,0 +1,11 @@
+<% content_for :title, 'Recovery codes' %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">SECURITY</p>
+    <h1>Save your recovery codes</h1>
+    <p class="page-subtitle">Each code works once if you lose your phone. They won't be shown again.</p>
+  </div></div>
+<section class="panel">
+  <ul class="recovery-codes"><% @recovery_codes.each do |code| %><li><code><%= code %></code></li><% end %></ul>
+  <p class="muted">Keep them in your password manager. Any previous codes no longer work.</p>
+  <%= link_to 'I saved them, continue →', admin_root_path, class: 'button button-dark' %></section>

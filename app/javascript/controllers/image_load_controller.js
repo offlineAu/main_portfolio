@@ -2,8 +2,11 @@ import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
   static targets = ["image", "fallback"];
+  static values = { ratio: String };
 
   connect() {
+    // Set through the CSSOM: the CSP forbids inline style attributes.
+    if (this.hasRatioValue) this.element.style.aspectRatio = this.ratioValue;
     this.loaded = () => this.resolve(this.imageTarget.naturalWidth > 0);
     this.failed = () => this.resolve(false);
     this.imageTarget.addEventListener("load", this.loaded);

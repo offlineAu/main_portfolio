@@ -166,6 +166,42 @@
   width: 100%;
 }
 
+/* Security */
+.setup-steps {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.qr-frame {
+  width: 220px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+.qr-code {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.setup-key,
+.recovery-codes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+}
+.recovery-codes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.recovery-codes li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface, #f3efe9);
+}
+
 @media (max-width: 900px) {
   .admin-layout {
     flex-direction: column;

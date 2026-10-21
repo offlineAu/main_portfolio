@@ -30,7 +30,7 @@
     <%= stylesheet_link_tag 'base', 'site', 'data-turbo-track': 'reload' %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation verse">
+  <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation verse media-guard">
     <a class="skip-link" href="#main-content">Skip to content</a>
     <%= render 'shared/preloader', profile: @profile %>
     <div id="navigation-loader" class="navigation-loader" data-turbo-permanent aria-live="polite" aria-atomic="true">
@@ -64,14 +64,14 @@
     <div class="workspace">
       <header class="topbar">
         <div class="header-heading"><button class="mobile-toggle icon-button" data-action="navigation#open" data-navigation-target="trigger" aria-controls="site-navigation" aria-expanded="false" aria-label="Open navigation"><%= icon('menu') %></button><span class="breadcrumb">My portfolio <span>/</span> <strong><%= page_title %></strong></span></div>
-        <div class="header-actions"><span class="availability"><%= @profile.availability %></span><%= mail_to @profile.email, class: 'button button-small' do %>Get in touch <%= icon('arrow') %><% end %></div>
+        <div class="header-actions"><span class="availability"><%= @profile.availability %></span><%= protected_contact_link @profile.email, class: 'button button-small' do %>Get in touch <%= icon('arrow') %><% end %></div>
       </header>
       <main class="main-content" id="main-content" tabindex="-1">
         <% if @preview %>
           <div class="flash notice">Private preview · <%= @project.published? ? 'Published' : 'Draft — visible only to you' %> <%= link_to 'Back to editor', admin_edit_content_path(resource: 'projects', id: @project.slug) %></div>
         <% end %>
         <%= yield %>
-        <footer class="page-footer"><span>© <%= Date.current.year %> <%= @profile.short_name %></span><span>Ruby on Rails</span></footer>
+        <footer class="page-footer"><span>© <%= Date.current.year %> <%= @profile.short_name %> · Images may not be reused without permission</span><span>Ruby on Rails</span></footer>
       </main>
     </div>
     <%= render 'shared/social_deck', cards: social_cards(@profile) %>

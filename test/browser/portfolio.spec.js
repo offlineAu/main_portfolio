@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
 const path = require("path");
+const { signIn, watchCsp } = require("./owner");
 
 // The first-visit preloader has its own spec; everywhere else, start as a returning visitor.
 test.beforeEach(async ({ context }) => {
@@ -13,6 +14,7 @@ test("public pages stay accessible and within the viewport at four sizes", async
   test.setTimeout(180000);
   const errors = [];
   const issues = [];
+  const cspViolations = watchCsp(page);
   page.on("pageerror", (error) => errors.push(error.message));
   for (const width of [375, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
@@ -68,6 +70,7 @@ test("public pages stay accessible and within the viewport at four sizes", async
   }
   expect(errors).toEqual([]);
   expect(issues).toEqual([]);
+  expect(cspViolations).toEqual([]);
 });
 
 test("mobile navigation traps focus, closes with Escape, and supports Turbo navigation", async ({
@@ -117,13 +120,7 @@ test("owner can create, preview, upload, publish, unpublish, and delete a projec
   page,
   browser,
 }) => {
-  await page.goto("/session/new");
-  await page.getByLabel("Email address").fill("browser-test@example.com");
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill("browser-test-only-password");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await signIn(page);
   await page.getByRole("link", { name: "Add a project +" }).click();
   const slug = `browser-project-${Date.now()}`;
   const projectName = `Browser QA project ${slug}`;
@@ -206,17 +203,13 @@ test("owner can create, preview, upload, publish, unpublish, and delete a projec
 });
 
 test("content studio is accessible on desktop and mobile", async ({ page }) => {
+  const cspViolations = watchCsp(page);
   await page.goto("/session/new");
   expect(
     (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
       .violations,
   ).toEqual([]);
-  await page.getByLabel("Email address").fill("browser-test@example.com");
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill("browser-test-only-password");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await signIn(page);
   for (const width of [375, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     for (const route of [
@@ -224,6 +217,8 @@ test("content studio is accessible on desktop and mobile", async ({ page }) => {
       "/admin/projects/new",
       "/admin/projects/sentisphere/edit",
       "/admin/profile",
+      "/admin/security",
+      "/admin/activity",
     ]) {
       await page.goto(route);
       expect(
@@ -244,6 +239,7 @@ test("content studio is accessible on desktop and mobile", async ({ page }) => {
       ).toEqual([]);
     }
   }
+  expect(cspViolations).toEqual([]);
 });
 
 test("socials deck deals cards, links to the real profiles, and closes with Escape", async ({
@@ -259,6 +255,10 @@ test("socials deck deals cards, links to the real profiles, and closes with Esca
   await expect(frontLink).toHaveAttribute("href", /github\.com/);
   await page.getByRole("button", { name: /Next card/ }).click();
   await expect(frontLink).toHaveAttribute("href", /linkedin\.com\/in\/airljoriz/);
+  await page.getByRole("button", { name: /Next card/ }).click();
+  // The address is decoded in the browser; the HTML only carries an encoded value.
+  await expect(frontLink).toHaveAttribute("href", /^mailto:[^@\s]+@[^@\s]+$/);
+  await expect(deck.locator(".verse-card:not([inert]) .verse-card-handle")).toHaveText(/^[^@\s]+@[^@\s]+$/);
   await page.keyboard.press("Escape");
   await expect(page.locator("#social-deck")).not.toHaveClass(/is-open/);
   await expect(page.locator("#social-deck")).toHaveAttribute("inert", "");
@@ -297,4 +297,18 @@ test("skills marquee and socials deck still animate when the OS has animations o
     return element.getBoundingClientRect().top !== y;
   });
   expect(moving).toBe(true);
+});
+
+test("portfolio images resist casual saving while text and links behave normally", async ({ page }) => {
+  await page.goto("/");
+  const image = page.locator("img.protected-media").first();
+  await expect(image).toHaveAttribute("draggable", "false");
+  const blocked = (selector) =>
+    page.locator(selector).first().evaluate((element) => {
+      const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+      return !element.dispatchEvent(event);
+    });
+  expect(await blocked("img.protected-media")).toBe(true);
+  expect(await blocked("h1")).toBe(false);
+  expect(await page.locator("h1").evaluate((element) => getComputedStyle(element).userSelect)).not.toBe("none");
 });
