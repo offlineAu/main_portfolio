@@ -5,9 +5,7 @@
     window.portfolioEntrance.start();
     return;
   }
-  let createPaperBurn;
-  // Only the burn enhancement needs a module request; the counter and hero run inline.
-  import("effects/paper_burn").then(module => { createPaperBurn = module.createPaperBurn; }).catch(() => {});
+  const createPaperBurn = window.portfolioPaperBurn;
   const styleLinks = [...document.querySelectorAll("link[data-entrance-styles]")];
   const stylesReady = Promise.all(styleLinks.map(link => {
     if (link.entranceReady === true) return;
@@ -132,7 +130,7 @@
 
     // The flame catches over the face in the hero portrait underneath (the middle of the screen elsewhere).
     ignite() {
-      // The counter and wipe never wait for this optional module download.
+      // Never uncover the landing page before its essential assets are ready.
       if (!createPaperBurn || !landingLoaded) return;
       const portrait = document.querySelector(".hero-portrait")?.getBoundingClientRect();
       this.origin = portrait?.width
@@ -194,6 +192,9 @@
         }
         return;
       }
+      // A cold-cache portrait may finish after the counting loop has stopped at 99%.
+      // Ignite before changing state; render(100) deliberately cannot start a new burn while leaving.
+      if (this.burner === undefined) this.ignite();
       this.leaving = true;
       clearTimeout(this.deadlineTimer);
       cancelAnimationFrame(this.frame);

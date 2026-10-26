@@ -1,3 +1,6 @@
+// Embedded before the entrance runtime so a cold cache cannot delay the burn.
+(() => {
+  if (window.portfolioPaperBurn) return;
 // Burns a full-screen "sheet of paper" away with WebGL: the paper scorches brown ahead of a ragged, flickering
 // ember line, chars to black, crumbles into a hole that casts a soft shadow and glows onto the page beneath,
 // while a 2D canvas on top throws embers and smoke off the advancing front.
@@ -232,7 +235,7 @@ function createParticles(canvas, scale) {
 // The caller drives the burn: set(value) while loading (0–1, eased toward so jumps stay smooth), then
 // finish(ms) burns off whatever is left and resolves once the last embers have mostly drifted away.
 // onFrame(radius) reports how far (CSS px) the first flame has spread from the origin, ignoring the noise.
-export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgnite, onReveal, onFrame, onFallback }) {
+function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgnite, onReveal, onFrame, onFallback }) {
   // Keep shader work bounded even on large Windows displays with scaling enabled.
   const scale = Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(1_000_000 / (innerWidth * innerHeight)));
   const width = Math.max(1, Math.floor(innerWidth * scale));
@@ -365,3 +368,6 @@ export function createPaperBurn({ host, paint, origin, finishFrom = 0.55, onIgni
     stop,
   };
 }
+
+  window.portfolioPaperBurn = createPaperBurn;
+})();
