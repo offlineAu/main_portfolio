@@ -55,6 +55,19 @@ Veloce uses a sticky screenshot story on desktop and inline images on mobile.
 The new reveals and story transitions respect reduced motion and remain readable
 without JavaScript. Motion controllers clean up when Turbo caches or replaces a page.
 
+The first-visit preloader and hero entrance are embedded directly in the HTML,
+with nonce-protected loader styles. Showing the loader needs no Stimulus, external
+scripts, fonts, images, or WebGL. The visible loading clock starts when the runtime runs,
+so slow asset downloads cannot use up the entrance before it appears. Full
+stylesheets load without blocking the loader's first paint; the sheet stays visible
+until the landing page is styled and its portrait is decoded, then the hero plays
+its entrance. A failed portrait settles gracefully too. The portrait is preloaded
+at high priority. The paper burn loads separately; an animated wipe takes over if it is late, unavailable, or
+too slow. OS animation settings and blocked storage do not skip the entrance.
+Lower-end devices use opacity and transforms for the hero instead of blur and
+continuous pointer movement. The preloader still runs once per tab session when
+storage is available; JavaScript-free visits retain readable content.
+
 ```sh
 bin/rails test
 bin/rails zeitwerk:check

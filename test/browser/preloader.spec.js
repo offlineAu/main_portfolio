@@ -28,7 +28,7 @@ test("first visit counts to 100, burns away, and stays gone for the session", as
   expect(errors).toEqual([]);
 });
 
-test("the preloader is capped on a slow network", async ({ page }) => {
+test("slow media keeps the entrance visible until the hero can appear", async ({ page }) => {
   let mediaRequests = 0;
   await page.route(/\/media\//, async (route) => {
     mediaRequests += 1;
@@ -42,11 +42,15 @@ test("the preloader is capped on a slow network", async ({ page }) => {
   expect(mediaRequests).toBeGreaterThan(0);
 });
 
-test("reduced motion skips the preloader", async ({ page }) => {
+test("OS animations off still plays the preloader and hero entrance", async ({ page }) => {
+  await observeLifecycle(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.locator("html")).not.toHaveClass(/is-preloading/);
-  await expect(page.locator(".preloader")).toBeHidden();
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.querySelector('[data-preloader-target="count"]')?.dataset.value)).not.toBe("0");
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  await expectCompleted(page);
+  await expect(page.locator(".hero-char")).not.toHaveCount(0);
 });
 
 test("without JavaScript the preloader never covers content", async ({ browser }) => {
@@ -75,7 +79,7 @@ async function expectCompleted(page, timeout = 8000) {
   expect(await page.evaluate(() => window.loaderEvents)).toEqual(["preloader:reveal", "preloader:complete"]);
 }
 
-test("5 FPS still reaches 100 and finishes before the head failsafe", async ({ page }) => {
+test("5 FPS still reaches 100 and finishes on time", async ({ page }) => {
   await observeLifecycle(page);
   await page.addInitScript(() => {
     window.requestAnimationFrame = callback => setTimeout(() => callback(performance.now()), 200);
@@ -98,9 +102,9 @@ test("the deadline works even when animation frames never fire", async ({ page }
   await expectCompleted(page, 4500);
 });
 
-test("late controller startup finishes immediately without starting fire", async ({ page }) => {
+test("delayed burn enhancement still plays the complete inline entrance", async ({ page }) => {
   await observeLifecycle(page);
-  await page.route(/\/preloader_controller[^/]*\.js/, async route => {
+  await page.route(/\/paper_burn[^/]*\.js/, async route => {
     await new Promise(resolve => setTimeout(resolve, 4000));
     await route.continue();
   });
@@ -108,9 +112,9 @@ test("late controller startup finishes immediately without starting fire", async
   await expectCompleted(page, 6500);
 });
 
-test("missing controller still reveals and records completion through the head failsafe", async ({ page }) => {
+test("missing burn enhancement still counts and reveals exactly once", async ({ page }) => {
   await observeLifecycle(page);
-  await page.route(/\/preloader_controller[^/]*\.js/, route => route.abort());
+  await page.route(/\/paper_burn[^/]*\.js/, route => route.abort());
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expectCompleted(page, 11000);
 });
@@ -157,9 +161,9 @@ test("slow graphics fall back and rendering stays within its pixel budget", asyn
 });
 
 
-test("controller arrival after the failsafe does not replay the reveal", async ({ page }) => {
+test("burn enhancement arriving after completion does not replay the reveal", async ({ page }) => {
   await observeLifecycle(page);
-  await page.route(/\/preloader_controller[^/]*\.js/, async route => {
+  await page.route(/\/paper_burn[^/]*\.js/, async route => {
     await new Promise(resolve => setTimeout(resolve, 10000));
     await route.continue();
   });
@@ -180,4 +184,112 @@ test("context loss during the final burn still completes exactly once", async ({
     document.querySelector("canvas.paper-burn").getContext("webgl").getExtension("WEBGL_lose_context").loseContext();
   });
   await expectCompleted(page);
+});
+
+
+test("entrance plays with every external JavaScript request blocked", async ({ page }) => {
+  await observeLifecycle(page);
+  await page.route(/\/assets\/.*\.js(?:\?.*)?$/, route => route.abort());
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => Number(document.querySelector('[data-preloader-target="count"]')?.dataset.value))).toBeGreaterThan(0);
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  await expectCompleted(page);
+});
+
+test("the preloader animates before stylesheets arrive and waits to reveal the styled hero", async ({ page }) => {
+  await observeLifecycle(page);
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  await page.route(/\/assets\/.*\.css(?:\?.*)?$/, async route => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "commit" });
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect(page.locator(".preloader")).toHaveCSS("background-color", "rgb(245, 240, 234)");
+  await expect(page.locator("html")).toHaveClass(/is-style-loading/);
+  await expect(page.locator('[data-preloader-target="count"]')).toHaveAttribute("data-value", "99", { timeout: 5000 });
+  await expect(page.locator(".preloader")).toBeVisible();
+  await page.screenshot({ path: "test-results/entrance-before-styles.png" });
+  release();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  await expectCompleted(page);
+});
+
+test("blocked session storage does not skip the entrance", async ({ page }) => {
+  await observeLifecycle(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "sessionStorage", { get() { throw new DOMException("Storage blocked", "SecurityError"); } });
+  });
+  await page.goto("/");
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect(page.locator(".preloader")).toHaveCount(0, { timeout: 8000 });
+  expect(await page.evaluate(() => window.loaderEvents)).toEqual(["preloader:reveal", "preloader:complete"]);
+});
+
+
+test("a throttled low-end device keeps the entrance with cheaper hero effects", async ({ page }) => {
+  await observeLifecycle(page);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "hardwareConcurrency", { get: () => 2 });
+    Object.defineProperty(navigator, "deviceMemory", { get: () => 2 });
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  const filters = await page.locator(".hero-char").first().evaluate(element =>
+    element.getAnimations().flatMap(animation => animation.effect.getKeyframes().map(frame => frame.filter)));
+  expect(filters.every(filter => filter === "none")).toBe(true);
+  await expectCompleted(page);
+  await cdp.detach();
+});
+
+
+test("a slow portrait cannot miss the landing animation", async ({ page }) => {
+  await observeLifecycle(page);
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  await page.route(/\/media\//, async route => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "commit" });
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect(page.locator('[data-preloader-target="count"]')).toHaveAttribute("data-value", "99", { timeout: 5000 });
+  expect(await page.evaluate(() => window.loaderEvents)).toEqual([]);
+  expect(await page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBe(0);
+  release();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  expect(await page.locator(".hero-portrait").evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+  await expectCompleted(page);
+});
+
+
+test("a failed portrait still releases the loader and plays the hero", async ({ page }) => {
+  await observeLifecycle(page);
+  await page.route(/\/media\//, route => route.abort());
+  await page.goto("/");
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  await expectCompleted(page);
+});
+
+test("navigating home waits for that visit's portrait before playing the entrance", async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("preloaded", "1"));
+  await page.goto("/about");
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  await page.route(/\/media\//, async route => {
+    await held;
+    await route.continue();
+  });
+  await page.locator(".nav-list").getByRole("link", { name: "Overview", exact: true }).click();
+  await expect(page.locator(".hero-char")).not.toHaveCount(0);
+  expect(await page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBe(0);
+  release();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  expect(await page.locator(".hero-portrait").evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
 });

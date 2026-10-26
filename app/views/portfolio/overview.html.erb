@@ -4,7 +4,7 @@
   <p class="hero-meta hero-meta-left"><%= icon('code') %><%= @profile.title %></p>
   <p class="hero-meta hero-meta-right"><%= icon('pin') %><%= @profile.location %></p>
   <%# Layered lockup: the solid first name sits behind the portrait and an outline copy sits in front, so the letters turn to outline where they cross the face. The outline surname starts in front and dissolves into its copy behind the portrait. %>
-  <h1 class="hero-name" id="hero-name" aria-label="<%= @profile.short_name %> <%= @profile.name.split.last %>" data-controller="hero-name">
+  <h1 class="hero-name" id="hero-name" aria-label="<%= @profile.short_name %> <%= @profile.name.split.last %>">
     <span class="hero-name-line hero-name-first" aria-hidden="true" data-hero-name-target="line" data-group="first"><%= @profile.short_name %></span>
     <span class="hero-name-line hero-name-first hero-name-outline hero-name-front" aria-hidden="true" data-hero-name-target="line" data-group="first"><%= @profile.short_name %></span>
     <span class="hero-name-line hero-name-last hero-name-outline" aria-hidden="true" data-hero-name-target="line" data-group="last"><%= @profile.name.split.last %></span>

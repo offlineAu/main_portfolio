@@ -13,34 +13,36 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <% %w[base site].each do |stylesheet| %>
+      <%= tag.link rel: 'preload', href: asset_path("#{stylesheet}.css"), as: 'style', fetchpriority: 'high' %>
+    <% end %>
+    <% if request.path == root_path && @profile.portrait.attached? %>
+      <%= tag.link rel: 'preload', href: media_path_for(@profile.portrait.attachment), as: 'image', fetchpriority: 'high' %>
+    <% end %>
     <%= tag.link rel: 'preload', href: asset_path('inter-tight-variable.woff2'), as: 'font', type: 'font/woff2', crossorigin: 'anonymous' %>
     <%= tag.link rel: 'preload', href: asset_path('instrument-serif-400.woff2'), as: 'font', type: 'font/woff2', crossorigin: 'anonymous' %>
     <%= tag.link rel: 'preload', href: asset_path('instrument-serif-400-italic.woff2'), as: 'font', type: 'font/woff2', crossorigin: 'anonymous' %>
-    <%# Before first paint: opt into the preloader once per tab session. Without JS it never shows; the timeout is a failsafe. %>
+    <%# Opt in before paint; storage failures and OS animation settings never skip the entrance. %>
     <%= javascript_tag nonce: true do %>
       (function () {
-        var root = document.documentElement;
-        try {
-          if (sessionStorage.getItem("preloaded") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        } catch (error) { return; }
-        root.classList.add("is-preloading");
-        root.dataset.preloaderStarted = performance.now();
-        var timer = setTimeout(function () {
-          document.dispatchEvent(new CustomEvent("preloader:timeout"));
-          // The controller may never arrive. Finish the same lifecycle without it.
-          if (!root.classList.contains("is-preloading")) return;
-          root.classList.remove("is-preloading");
-          delete root.dataset.preloaderStarted;
-          try { sessionStorage.setItem("preloaded", "1"); } catch (error) {}
-          document.dispatchEvent(new CustomEvent("preloader:reveal"));
-          var loader = document.querySelector(".preloader");
-          if (loader) loader.remove();
-          document.dispatchEvent(new CustomEvent("preloader:complete"));
-        }, 9000);
-        document.addEventListener("preloader:complete", function () { clearTimeout(timer); }, { once: true });
+        document.documentElement.classList.add("is-style-loading");
+        // Download the full styles without blocking the already styled loading screen.
+        function applyStyles(event) {
+          var link = event.target;
+          if (!link.matches || !link.matches("link[data-entrance-styles]")) return;
+          // Keep the link markup stable so Turbo's tracked asset signature is unchanged.
+          if (link.sheet) link.sheet.media.mediaText = "all";
+          link.entranceReady = true;
+        }
+        document.addEventListener("load", applyStyles, true);
+        document.addEventListener("error", applyStyles, true);
+        try { if (sessionStorage.getItem("preloaded")) return; } catch (error) {}
+        document.documentElement.classList.add("is-preloading");
       })();
     <% end %>
-    <%= stylesheet_link_tag 'base', 'site', 'data-turbo-track': 'reload' %>
+    <%= render 'shared/entrance_styles' %>
+    <%= stylesheet_link_tag 'base', 'site', media: 'print', 'data-entrance-styles': true, 'data-turbo-track': 'reload' %>
+    <noscript><%= stylesheet_link_tag 'base', 'site' %></noscript>
     <%= javascript_importmap_tags %>
   </head>
   <body class="<%= 'home' if request.path == root_path %>" data-controller="navigation verse media-guard">
@@ -88,5 +90,7 @@
       </main>
     </div>
     <%= render 'shared/social_deck', cards: social_cards(@profile) %>
+    <%# Embed trusted local source: the entrance must not wait for Stimulus or a module request. %>
+    <%= javascript_tag Rails.root.join('app/javascript/critical/entrance.js').read, nonce: true %>
   </body>
 </html>

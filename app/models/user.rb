@@ -1,3 +1,5 @@
+require "rotp"
+
 class User < ApplicationRecord
   OTP_ISSUER = "Au portfolio"
   RECOVERY_CODE_COUNT = 10

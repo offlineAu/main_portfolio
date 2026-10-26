@@ -1,3 +1,5 @@
+require "rqrcode"
+
 module Admin
   # Enrolment: the secret lives only in the encrypted session cookie until a code confirms it.
   class TwoFactorsController < BaseController
