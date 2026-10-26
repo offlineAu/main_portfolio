@@ -1,5 +1,5 @@
 // Critical entrance: embedded in the HTML with a CSP nonce. No framework, module,
-// font, image, storage or WebGL download is required to play the entrance.
+// font, storage or WebGL download is required to show the loader.
 (() => {
   if (window.portfolioEntrance) {
     window.portfolioEntrance.start();
@@ -31,7 +31,7 @@
   // Counts 0→100 against real readiness (fonts, hero portrait, window load). Moments in, the sheet catches fire
   // right over the face in the hero portrait and the burn grows with the count (WebGL), so the burn itself is the
   // reveal while the site loads; at 100 the rest burns off. Without WebGL it wipes up instead.
-  // A minimum keeps the count readable on a warm cache; a cap keeps a slow network from holding the hero hostage.
+  // A minimum keeps the count readable on a warm cache; only the hero's essential assets can extend the cap.
   const MIN_MS = 2400;
   const MAX_MS = 3200;
   const IGNITE_AT = 6; // percent: just after the labels have risen in
@@ -266,6 +266,11 @@
 
     connect() {
       this.preference = matchMedia("(prefers-reduced-motion: reduce)");
+      // Each Turbo visit has its own portrait readiness, even when the runtime is already installed.
+      const portrait = this.element.closest(".hero")?.querySelector(".hero-portrait");
+      this.landingReady = Promise.all([stylesReady, portrait?.decode().catch(() => {})]).then(() => {
+        this.landingLoaded = true;
+      });
       this.fine = matchMedia("(pointer: fine)");
       this.originals = this.lineTargets.map((line) => line.textContent);
       this.reset = () => this.restore();
@@ -333,10 +338,11 @@
     }
 
     enter() {
-      if (!landingLoaded) {
+      if (this.disconnected) return;
+      if (!this.landingLoaded) {
         if (!this.waitingForLanding) {
           this.waitingForLanding = true;
-          landingReady.then(() => { if (this.element.isConnected) this.enter(); });
+          this.landingReady.then(() => { if (this.element.isConnected) this.enter(); });
         }
         return;
       }
@@ -402,6 +408,7 @@
     }
 
     disconnect() {
+      this.disconnected = true;
       this.stop();
       document.removeEventListener("turbo:before-cache", this.reset);
       this.preference.removeEventListener("change", this.motionChange);

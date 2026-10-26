@@ -266,3 +266,30 @@ test("a slow portrait cannot miss the landing animation", async ({ page }) => {
   expect(await page.locator(".hero-portrait").evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
   await expectCompleted(page);
 });
+
+
+test("a failed portrait still releases the loader and plays the hero", async ({ page }) => {
+  await observeLifecycle(page);
+  await page.route(/\/media\//, route => route.abort());
+  await page.goto("/");
+  await expect(page.locator(".preloader")).toBeVisible();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  await expectCompleted(page);
+});
+
+test("navigating home waits for that visit's portrait before playing the entrance", async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("preloaded", "1"));
+  await page.goto("/about");
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  await page.route(/\/media\//, async route => {
+    await held;
+    await route.continue();
+  });
+  await page.locator(".nav-list").getByRole("link", { name: "Overview", exact: true }).click();
+  await expect(page.locator(".hero-char")).not.toHaveCount(0);
+  expect(await page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBe(0);
+  release();
+  await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
+  expect(await page.locator(".hero-portrait").evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+});
