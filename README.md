@@ -85,6 +85,9 @@ logs, and development caches from the deployment upload.
 2. Configure `RAILS_ENV=production`, `PORT=3000`, `APP_URL` (the deployment's HTTPS
    origin), `SECRET_KEY_BASE` (generate with `bin/rails secret`), and `DATABASE_URL`
    for an externally accessible PostgreSQL database.
+   The Supabase integration variable `DATABASE_URL_POSTGRES_URL` is also accepted
+   when `DATABASE_URL` is unset. Configure the connection separately for Preview
+   and Production; previews should use their own database.
 3. Configure a private S3-compatible bucket using `ACTIVE_STORAGE_SERVICE=amazon`,
    `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_ENDPOINT`, and
    `S3_REGION`. Use separate database and storage resources for previews.
