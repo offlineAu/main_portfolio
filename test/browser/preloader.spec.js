@@ -4,9 +4,11 @@ test("first visit counts to 100, burns away, and stays gone for the session", as
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setViewportSize({ width: 375, height: 812 });
+  await allowSoftwareWebGL(page);
   await page.goto("/");
   const preloader = page.locator(".preloader");
   await expect(preloader).toBeVisible();
+  await expect(preloader).toHaveClass(/is-burning/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const counts = [];
   await expect.poll(async () => {
@@ -62,7 +64,7 @@ test("without JavaScript the preloader never covers content", async ({ browser }
   await context.close();
 });
 
-// Observe lifecycle events even when the controller is delayed or never arrives.
+// Observe the lifecycle of the inline entrance independently of the main application.
 async function observeLifecycle(page) {
   await page.addInitScript(() => {
     window.loaderEvents = [];
@@ -100,23 +102,6 @@ test("the deadline works even when animation frames never fire", async ({ page }
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator('[data-preloader-target="count"]')).toHaveAttribute("data-value", "100", { timeout: 4000 });
   await expectCompleted(page, 4500);
-});
-
-test("delayed burn enhancement still plays the complete inline entrance", async ({ page }) => {
-  await observeLifecycle(page);
-  await page.route(/\/paper_burn[^/]*\.js/, async route => {
-    await new Promise(resolve => setTimeout(resolve, 4000));
-    await route.continue();
-  });
-  await page.goto("/", { waitUntil: "commit" });
-  await expectCompleted(page, 6500);
-});
-
-test("missing burn enhancement still counts and reveals exactly once", async ({ page }) => {
-  await observeLifecycle(page);
-  await page.route(/\/paper_burn[^/]*\.js/, route => route.abort());
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expectCompleted(page, 11000);
 });
 
 async function allowSoftwareWebGL(page) {
@@ -161,18 +146,6 @@ test("slow graphics fall back and rendering stays within its pixel budget", asyn
 });
 
 
-test("burn enhancement arriving after completion does not replay the reveal", async ({ page }) => {
-  await observeLifecycle(page);
-  await page.route(/\/paper_burn[^/]*\.js/, async route => {
-    await new Promise(resolve => setTimeout(resolve, 10000));
-    await route.continue();
-  });
-  await page.goto("/", { waitUntil: "commit" });
-  await expectCompleted(page, 11000);
-  await page.waitForLoadState("load");
-  await expectCompleted(page);
-});
-
 test("context loss during the final burn still completes exactly once", async ({ page }) => {
   await observeLifecycle(page);
   await allowSoftwareWebGL(page);
@@ -187,11 +160,14 @@ test("context loss during the final burn still completes exactly once", async ({
 });
 
 
-test("entrance plays with every external JavaScript request blocked", async ({ page }) => {
+test("a fresh first visit burns even with every external JavaScript request blocked", async ({ page }) => {
   await observeLifecycle(page);
+  await allowSoftwareWebGL(page);
   await page.route(/\/assets\/.*\.js(?:\?.*)?$/, route => route.abort());
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".preloader")).toBeVisible();
+  await expect(page.locator(".preloader")).toHaveClass(/is-burning/);
+  await expect(page.locator(".preloader")).not.toHaveClass(/is-wiping/);
   await expect.poll(() => page.evaluate(() => Number(document.querySelector('[data-preloader-target="count"]')?.dataset.value))).toBeGreaterThan(0);
   await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
   await expectCompleted(page);
@@ -248,8 +224,9 @@ test("a throttled low-end device keeps the entrance with cheaper hero effects", 
 });
 
 
-test("a slow portrait cannot miss the landing animation", async ({ page }) => {
+test("a cold-cache portrait finishing after 99 percent still starts the burn", async ({ page }) => {
   await observeLifecycle(page);
+  await allowSoftwareWebGL(page);
   let release;
   const held = new Promise(resolve => { release = resolve; });
   await page.route(/\/media\//, async route => {
@@ -262,6 +239,8 @@ test("a slow portrait cannot miss the landing animation", async ({ page }) => {
   expect(await page.evaluate(() => window.loaderEvents)).toEqual([]);
   expect(await page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBe(0);
   release();
+  await expect(page.locator(".preloader")).toHaveClass(/is-burning/);
+  await expect(page.locator(".preloader")).not.toHaveClass(/is-wiping/);
   await expect.poll(() => page.locator(".hero-char").first().evaluate(element => element.getAnimations().length)).toBeGreaterThan(0);
   expect(await page.locator(".hero-portrait").evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
   await expectCompleted(page);

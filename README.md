@@ -62,8 +62,10 @@ so slow asset downloads cannot use up the entrance before it appears. Full
 stylesheets load without blocking the loader's first paint; the sheet stays visible
 until the landing page is styled and its portrait is decoded, then the hero plays
 its entrance. A failed portrait settles gracefully too. The portrait is preloaded
-at high priority. The paper burn loads separately; an animated wipe takes over if it is late, unavailable, or
-too slow. OS animation settings and blocked storage do not skip the entrance.
+at high priority. The paper burn renderer is embedded alongside the entrance
+runtime, so it needs no separate download on a first visit. A portrait that finishes
+after the counter reaches 99% still starts the burn before exiting. An animated
+wipe takes over when WebGL is unavailable or too slow. OS animation settings and blocked storage do not skip the entrance.
 Lower-end devices use opacity and transforms for the hero instead of blur and
 continuous pointer movement. The preloader still runs once per tab session when
 storage is available; JavaScript-free visits retain readable content.

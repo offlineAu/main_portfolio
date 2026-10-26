@@ -91,6 +91,7 @@
     </div>
     <%= render 'shared/social_deck', cards: social_cards(@profile) %>
     <%# Embed trusted local source: the entrance must not wait for Stimulus or a module request. %>
+    <%= javascript_tag Rails.root.join('app/javascript/critical/paper_burn.js').read, nonce: true %>
     <%= javascript_tag Rails.root.join('app/javascript/critical/entrance.js').read, nonce: true %>
   </body>
 </html>
