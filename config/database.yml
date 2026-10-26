@@ -15,4 +15,5 @@ test:
 
 production:
   <<: *default
-  url: <%= ENV["DATABASE_URL"] %>
+  # Vercel prefixes the Supabase integration variables with the connection name.
+  url: <%= ENV["DATABASE_URL"].presence || ENV["DATABASE_URL_POSTGRES_URL"].presence %>

@@ -1,6 +1,6 @@
 {
   "name": "Airl Joriz Janoplo",
-  "title": "Full Stack Developer",
+  "title": "Junior AI Engineer",
   "email": "janoplo.airjoriz@gmail.com",
   "phone": "+63-916-669-3799",
   "websiteUrl": "https://www.veloceapp.dev",
@@ -9,7 +9,7 @@
   "tagline": "I build practical web applications, from school management modules to student well-being platforms, using JavaScript, TypeScript, React, Laravel, and FastAPI.",
   "about": {
     "body": [
-      "I'm an early-career full stack developer with hands-on experience building frontend interfaces, backend services, database integrations, and RESTful APIs. I work with JavaScript, TypeScript, PHP, and Python, with experience in React, Laravel, and FastAPI.",
+      "I'm an early-career AI Engineer with hands-on experience building frontend interfaces, backend services, database integrations, and RESTful APIs. I work with JavaScript, TypeScript, PHP, and Python, with experience in React, Laravel, and FastAPI.",
       "As a Junior Web Developer at Essentiel CK Childrens Publishing, I develop and maintain School Management System modules, including the Human Resource & Payroll Portal and Registrar Portal. My work supports employee management, payroll processes, records management, and registrar workflows.",
       "I also spearheaded Sentisphere, a web and mobile sentiment analysis system for monitoring student emotional health. I developed frontend and backend components, integrated the database, and documented the system through planning documents, architectural diagrams, and workflow diagrams."
     ]
@@ -23,9 +23,9 @@
     {
       "role": "Junior Web Developer",
       "org": "Essentiel CK Childrens Publishing",
-      "period": "June 2026 — Present",
-      "current": true,
-      "details": "Develop and maintain modules for a School Management System, including a Human Resource & Payroll Portal and Registrar Portal.\n\nImplement features for employee management, payroll processes, records management, and registrar-related workflows."
+      "period": "June 2025 — July 2026",
+      "current": false,
+      "details": "Developed and maintained modules for a School Management System, including a Human Resource & Payroll Portal and Registrar Portal.\n\nImplement features for employee management, payroll processes, records management, and registrar-related workflows."
     },
     {
       "role": "Web Developer",

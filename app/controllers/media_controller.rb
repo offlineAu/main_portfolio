@@ -1,6 +1,10 @@
 class MediaController < ApplicationController
   WATERMARK = Rails.root.join("lib/assets/watermark.png").to_s
+  # Processed images per instance. Without it every request re-reads the variant records and
+  # downloads the file from storage again; the access checks below still run on every request.
+  PROCESSED = ActiveSupport::Cache::MemoryStore.new(size: 48.megabytes)
 
+  skip_before_action :load_profile
   rescue_from ActiveSupport::MessageVerifier::InvalidSignature, ActiveStorage::FileNotFoundError, with: -> { head :not_found }
   rate_limit to: 300, within: 1.minute, with: -> { head :too_many_requests }
 
@@ -11,14 +15,17 @@ class MediaController < ApplicationController
     attachment = MediaToken.find_attachment!(params[:id])
     record = attachment.record
     raise ActiveRecord::RecordNotFound unless record.is_a?(Profile) || (record.is_a?(Project) && (record.published? || authenticated?))
-    processed = attachment.blob.variant(variant_options(record)).processed
+    options = variant_options(record)
+    # A replaced image gets a new attachment and blob, and the options carry the watermark choice.
+    key = [attachment.id, attachment.blob_id, ActiveSupport::Digest.hexdigest(options.inspect)].join("/")
+    image = PROCESSED.fetch(key) { attachment.blob.variant(options).processed.download }
     # The signed URL is derived from the attachment id, so a replaced image gets a new URL:
     # published media can be cached for good. Drafts must never be stored.
     draft = record.is_a?(Project) && !record.published?
     response.headers["Cache-Control"] = draft ? "private, no-store" : "private, max-age=31536000, immutable"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-    send_data processed.download, type: "image/webp", disposition: "inline"
+    send_data image, type: "image/webp", disposition: "inline"
   end
 
   private
