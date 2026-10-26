@@ -1,6 +1,6 @@
 <%# First-visit loader. Hidden unless the head script sets html.is-preloading; Turbo drops it before caching. %>
 <% words = ['selected work', 'web apps', 'mobile apps', 'case studies', 'the portfolio'] %>
-<div class="preloader" aria-hidden="true" data-controller="preloader" data-turbo-temporary>
+<div class="preloader" aria-hidden="true" data-turbo-temporary>
   <div class="preloader-row">
     <span class="preloader-mask"><span class="preloader-label"><%= profile.name %></span></span>
     <span class="preloader-mask preloader-mask-title"><span class="preloader-label"><%= profile.title %></span></span>
